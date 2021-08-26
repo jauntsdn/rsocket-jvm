@@ -1,0 +1,117 @@
+/*
+ * Copyright 2020 - present Maksym Ostroverkhov.
+ */
+
+plugins {
+    id "io.spring.dependency-management" apply false
+    id "com.google.protobuf" apply false
+    id "com.github.sherter.google-java-format" apply false
+    id "com.palantir.git-version"
+    id "com.github.ben-manes.versions"
+}
+
+description = "RSocket-jvm api libraries: parent"
+
+apply from: "gradle/dependency-management.gradle"
+apply from: "gradle/publishing.gradle"
+
+allprojects {
+    dependencyLocking {
+        lockAllConfigurations()
+    }
+}
+
+subprojects {
+    apply plugin: "com.github.sherter.google-java-format"
+
+    version = projectVersion(project)
+
+    println "Building module ${project.name}:${version}"
+
+    repositories {
+        mavenCentral()
+    }
+
+    def javaVersion = project.name.endsWith("helidon") ? 11 : 1.8
+
+    plugins.withType(JavaLibraryPlugin) {
+        compileJava {
+            sourceCompatibility = javaVersion
+            targetCompatibility = javaVersion
+
+            options.compilerArgs << "-XDignore.symbol.file"
+            dependsOn "googleJavaFormat"
+        }
+
+        task sourcesJar(type: Jar) {
+            classifier "sources"
+            from sourceSets.main.allJava
+        }
+
+        task javadocJar(type: Jar, dependsOn: javadoc) {
+            classifier "javadoc"
+            from javadoc.destinationDir
+        }
+
+        artifacts {
+            archives sourcesJar
+            archives javadocJar
+        }
+
+        if (version.endsWith("SNAPSHOT")) {
+            tasks.withType(Javadoc).all { enabled = false }
+        } else {
+            javadoc {
+                options.with {
+                    links jdkJavaDoc()
+                    links "https://netty.io/4.1/api/"
+
+                    addStringOption("Xdoclint:none", "-quiet")
+                }
+            }
+        }
+    }
+
+    googleJavaFormat {
+        toolVersion = "1.6"
+        exclude "**/generated"
+    }
+}
+
+task printProjectVersion {
+    doLast {
+        println "Project version: ${projectVersion(project)}"
+    }
+}
+
+task updates {
+    doLast {
+        dependencyUpdates
+    }
+}
+
+def jdkJavaDoc() {
+    def version = JavaVersion.current()
+    def majorVersion = version.majorVersion
+    if (version.isJava11Compatible()) {
+        return "https://docs.oracle.com/en/java/javase/$majorVersion/docs/api/"
+    } else {
+        return "https://docs.oracle.com/javase/$majorVersion/docs/api/"
+    }
+}
+
+def projectVersion(project) {
+    def versionSuffix = ""
+    def gitBranchName = versionDetails().branchName
+    def branchName = gitBranchName ?: project.findProperty("branch")
+    if (branchName != null) {
+        if (branchName == "develop") {
+            versionSuffix = "-SNAPSHOT"
+        } else if (branchName.startsWith("feature")) {
+            versionSuffix = "-${branchName.replace("/", "-")}-SNAPSHOT"
+        }
+    }
+    return project.version + versionSuffix
+}
+
+defaultTasks "goJF", "clean", "build"

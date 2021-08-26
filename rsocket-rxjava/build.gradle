@@ -1,0 +1,18 @@
+/*
+ * Copyright 2021 - present Maksym Ostroverkhov.
+ */
+
+plugins {
+    id "java-library"
+    id "signing"
+    id "maven-publish"
+}
+
+dependencies {
+    api project(":rsocket-messages")
+    api "io.reactivex.rxjava3:rxjava"
+
+    compileOnly "com.google.code.findbugs:jsr305"
+}
+
+description = "RSocket-rxjava api library"

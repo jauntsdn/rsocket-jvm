@@ -1,0 +1,16 @@
+/*
+ * Copyright 2020 - present Maksym Ostroverkhov.
+ */
+
+plugins {
+    id "java-library"
+    id "signing"
+    id "maven-publish"
+}
+
+dependencies {
+    api "io.netty:netty-buffer"
+    compileOnly "com.google.code.findbugs:jsr305"
+}
+
+description = "RSocket-jvm messages support"

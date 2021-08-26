@@ -1,0 +1,45 @@
+/*
+ * Copyright 2021 - present Maksym Ostroverkhov.
+ */
+
+plugins {
+    id "java-platform"
+    id "signing"
+    id "maven-publish"
+}
+
+description = "RSocket-jvm bill of materials"
+
+apply from: "../gradle/bom.gradle"
+
+javaPlatform.allowDependencies()
+
+dependencies {
+    api platform("io.netty:netty-bom:${nettyBomVersion}")
+    api platform("io.projectreactor:reactor-bom:${reactorBomVersion}")
+
+    constraints {
+        managedDependencyModules(parent).each { module -> api module }
+
+        api "io.reactivex.rxjava3:rxjava:${rxjavaVersion}"
+        api "io.helidon.common:helidon-common-reactive:${helidonCommonReactiveVersion}"
+        api "javax.inject:javax.inject:${javaxInjectVersion}"
+        api "javax.annotation:javax.annotation-api:${javaxAnnotationVersion}"
+        api "com.google.protobuf:protobuf-java:${protobufVersion}"
+
+        api "com.jauntsdn.rsocket:rsocket-rpc-reactor-compiler:${version}"
+        api "com.jauntsdn.rsocket:rsocket-rpc-rxjava-compiler:${version}"
+        api "com.jauntsdn.rsocket:rsocket-rpc-helidon-compiler:${version}"
+        api "com.google.protobuf:protoc:${protobufVersion}"
+    }
+}
+
+publishing {
+    publications {
+        maven(MavenPublication) {
+            from components.javaPlatform
+            // remove scope information from published BOM, except imported poms
+            removeDependencyScope(pom)
+        }
+    }
+}

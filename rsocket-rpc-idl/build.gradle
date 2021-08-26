@@ -1,0 +1,25 @@
+/*
+ * Copyright 2020 - present Maksym Ostroverkhov.
+ */
+
+plugins {
+    id "java-library"
+    id "com.google.protobuf"
+    id "signing"
+    id "maven-publish"
+}
+
+description = "RSocket-rpc compiler protobuf definitions"
+
+protobuf {
+    generateProtoTasks {
+        all().each { task ->
+            task.enabled = false
+
+            task.builtins {
+                cpp {}
+                remove java
+            }
+        }
+    }
+}

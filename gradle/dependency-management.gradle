@@ -1,0 +1,25 @@
+/*
+ * Copyright 2021 - present Maksym Ostroverkhov.
+ */
+
+subprojects {
+    apply plugin: "io.spring.dependency-management"
+
+    dependencyManagement {
+        imports {
+            mavenBom "io.netty:netty-bom:${nettyBomVersion}"
+            mavenBom "io.projectreactor:reactor-bom:${reactorBomVersion}"
+        }
+
+        dependencies {
+            dependency "io.reactivex.rxjava3:rxjava:${rxjavaVersion}"
+            dependency "io.helidon.common:helidon-common-reactive:${helidonCommonReactiveVersion}"
+            dependency "javax.inject:javax.inject:${javaxInjectVersion}"
+            dependency "javax.annotation:javax.annotation-api:${javaxAnnotationVersion}"
+            dependency "com.google.code.findbugs:jsr305:${jsr305Version}"
+        }
+        generatedPomCustomization {
+            enabled = false
+        }
+    }
+}

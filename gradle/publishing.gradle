@@ -1,0 +1,94 @@
+/*
+ * Copyright 2021 - present Maksym Ostroverkhov.
+ */
+subprojects {
+    plugins.withType(MavenPublishPlugin) {
+
+        publishing {
+            publications {
+                maven(MavenPublication) {
+
+                    plugins.withType(JavaLibraryPlugin) {
+                        from components.java
+                        artifact sourcesJar
+                        artifact javadocJar
+                    }
+
+                    pom {
+                        groupId = project.group
+                        name = project.name
+                        afterEvaluate {
+                            description = project.description
+                        }
+                        url = "https://jauntsdn.com"
+                        licenses {
+                            license {
+                                name = "The Apache Software License, Version 2.0"
+                                url = "https://www.apache.org/licenses/LICENSE-2.0.txt"
+                                distribution = "repo"
+                            }
+                        }
+                        developers {
+                            developer {
+                                id = "mostroverkhov"
+                                name = "Maksym Ostroverkhov"
+                                email = "m.ostroverkhov@gmail.com"
+                            }
+                        }
+                        scm {
+                            connection = "scm:git:https://github.com/jauntsdn/rsocket.git"
+                            developerConnection = "scm:git:https://github.com/jauntsdn/rsocket.git"
+                            url = "https://github.com/jauntsdn/rsocket"
+                        }
+                        versionMapping {
+                            usage("java-api") {
+                                fromResolutionResult()
+                            }
+                            usage("java-runtime") {
+                                fromResolutionResult()
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (project.hasProperty("ossrhUsername") && project.hasProperty("ossrhPassword")) {
+
+                task publishToSonatype {
+                    finalizedBy "publishMavenPublicationToSonatypeRepository"
+                    doLast {
+                        println "\nPublishing ${project.name} artifacts to Sonatype"
+                        println "Sonatype repository url: ${repositories.sonatype.url}\n"
+                        publishing.publications.maven.publishableArtifacts
+                                .collect { it.file.name}
+                                .sort { it }
+                                .each { println "[${project.name}] Uploading artifact..................${it}"}
+                    }
+                }
+
+                repositories {
+                    maven {
+                        name = "sonatype"
+                        def releasesRepoUrl = "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
+                        def snapshotsRepoUrl = "https://oss.sonatype.org/content/repositories/snapshots/"
+                        url = version.endsWith("SNAPSHOT") ? snapshotsRepoUrl : releasesRepoUrl
+                        credentials {
+                            username = project.property("ossrhUsername")
+                            password = project.property("ossrhPassword")
+                        }
+                    }
+                }
+            }
+        }
+
+        plugins.withType(SigningPlugin) {
+            signing {
+                //sign publishing.publications.maven
+                required {
+                    gradle.taskGraph.allTasks
+                            .any { it.name.contains("publishMavenPublicationToSonatypeRepository") }
+                }
+            }
+        }
+    }
+}

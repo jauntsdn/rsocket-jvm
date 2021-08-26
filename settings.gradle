@@ -1,0 +1,22 @@
+pluginManagement {
+    plugins {
+        id "com.github.ben-manes.versions" version "${versionsPluginVersion}"
+        id "io.spring.dependency-management" version "${dependencyManagementPluginVersion}"
+        id "com.google.protobuf" version "${protobufPluginVersion}"
+        id "com.github.sherter.google-java-format" version "${googleJavaFormatPluginVersion}"
+        id "com.palantir.git-version" version "${gitPluginVersion}"
+    }
+}
+
+rootProject.name = "jaunt-rsocket-parent"
+
+include "rsocket-messages"
+include "rsocket-reactor"
+include "rsocket-rpc-reactor"
+include "rsocket-rxjava"
+include "rsocket-rpc-rxjava"
+include "rsocket-helidon"
+include "rsocket-rpc-helidon"
+include "rsocket-rpc-idl"
+include "rsocket-bom"
+

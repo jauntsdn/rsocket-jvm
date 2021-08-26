@@ -1,0 +1,23 @@
+/*
+ * Copyright 2020 - present Maksym Ostroverkhov.
+ */
+
+ext.removeDependencyScope = { pom ->
+    pom.withXml {
+        asNode().dependencyManagement.first().dependencies.first().each {
+            dep ->
+                def scope = dep.scope
+                scope.each {
+                    if (it.value().first() != "import") {
+                        dep.remove(scope.first())
+                    }
+                }
+        }
+    }
+}
+
+ext.managedDependencyModules = { parent ->
+    parent.subprojects
+            .findAll { !it.name.endsWith("bom")}
+            .sort { "$it.name" }
+}
