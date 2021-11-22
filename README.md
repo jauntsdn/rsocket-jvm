@@ -5,15 +5,15 @@ Reactive Streams implementations.
 
 RSocket-JVM includes RSocket-RPC: remote procedure call system on top of Protocol Buffers.
 
-[RSocket](https://jauntsdn.com/post/rsocket-summary/) is low latency/high throughput L5 network protocol, 
+RSocket is low latency/high throughput L5 network protocol, 
 intended for high-performance services communication. It is transport agnostic, and runs on top 
 of any reliable byte stream transport.
 
 ### Motivation / Purpose
 
-RSocket-JVM is [very fast](https://jauntsdn.com/post/rsocket-vs-spring/) alternative to 
+RSocket-JVM is [very fast](https://jauntsdn.com/post/rsocket-summary/) alternative to 
 projectreactor-only RSocket/RSocket-java from "Reactive Foundation" -
-which is plagued by number of performance and security [problems](https://jauntsdn.com/post/rsocket-million-streams-2/).
+which is plagued by number of performance and security [problems](https://jauntsdn.com/post/rsocket-vs-spring/).
 
 **Multiple vendor libraries**. [Shared protocol core](https://jauntsdn.com/post/rsocket-jvm/) with minimal dependencies 
 (netty-buffer only) streamlined development process for each next vendor library.   
