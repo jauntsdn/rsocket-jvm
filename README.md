@@ -3,15 +3,15 @@
 This repository hosts API part of RSocket-JVM - suite of libraries for fast interprocess/network communication using major
 Reactive Streams implementations.  
 
-RSocket-JVM includes RSocket-RPC: remote procedure call system on top of Protocol Buffers.
-
 RSocket is low latency/high throughput L5 network protocol, 
 intended for high-performance services communication. It is transport agnostic, and runs on top 
 of any reliable byte stream transport.
 
+RSocket-JVM includes RSocket-RPC: remote procedure call system on top of Protocol Buffers, compatible with GRPC.
+
 ### Motivation / Purpose
 
-RSocket-JVM is [very fast](https://jauntsdn.com/post/rsocket-summary/) alternative to 
+RSocket-JVM is [very fast](https://jauntsdn.com/post/rsocket-summary/) (millions of messages per core) alternative to 
 projectreactor-only RSocket/RSocket-java from "Reactive Foundation" -
 which is plagued by number of performance and security [problems](https://jauntsdn.com/post/rsocket-vs-spring/).
 

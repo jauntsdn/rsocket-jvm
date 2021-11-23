@@ -160,14 +160,14 @@ public final class RSocketRpcHandler implements RSocketHandler {
   }
 
   @Override
-  public Multi<Message> requestChannel(Flow.Publisher<Message> payloads) {
+  public Multi<Message> requestChannel(Flow.Publisher<Message> messages) {
     return Multi.error(
         new RpcException(
             "RSocketRpcHandler: unsupported method: requestChannel(Publisher<Payload>)"));
   }
 
   @Override
-  public Multi<Message> requestChannel(Message message, Flow.Publisher<Message> payloads) {
+  public Multi<Message> requestChannel(Message message, Flow.Publisher<Message> messages) {
     try {
       String serviceName = service(message.metadata());
 
@@ -178,7 +178,7 @@ public final class RSocketRpcHandler implements RSocketHandler {
             message.release();
             return Multi.error(new RpcException(NO_DEFAULT_ZERO_SERVICES_MESSAGE));
           case 1:
-            return defaultService.requestChannel(message, payloads);
+            return defaultService.requestChannel(message, messages);
           default:
             message.release();
             return Multi.error(new RpcException(NO_DEFAULT_MULTIPLE_SERVICES_MESSAGE));
@@ -191,7 +191,7 @@ public final class RSocketRpcHandler implements RSocketHandler {
         return Multi.error(new RpcException(serviceName));
       }
 
-      return rSocketService.requestChannel(message, payloads);
+      return rSocketService.requestChannel(message, messages);
     } catch (Throwable t) {
       ReferenceCountUtil.safeRelease(message);
       return Multi.error(t);

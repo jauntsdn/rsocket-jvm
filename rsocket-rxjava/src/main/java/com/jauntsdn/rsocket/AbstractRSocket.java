@@ -43,7 +43,15 @@ public abstract class AbstractRSocket implements RSocketHandler {
 
   @Override
   public Flowable<Message> requestChannel(Publisher<Message> messages) {
-    return Flowable.error(new UnsupportedOperationException("request-channel not implemented"));
+    return Flowable.error(
+        new UnsupportedOperationException("request-channel(messages) not implemented"));
+  }
+
+  @Override
+  public Flowable<Message> requestChannel(Message message, Publisher<Message> messages) {
+    message.release();
+    return Flowable.error(
+        new UnsupportedOperationException("request-channel(message, messages) not implemented"));
   }
 
   @Override

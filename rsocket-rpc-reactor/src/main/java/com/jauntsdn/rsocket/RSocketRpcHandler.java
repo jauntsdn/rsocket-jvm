@@ -179,7 +179,7 @@ public final class RSocketRpcHandler implements RSocketHandler {
   }
 
   @Override
-  public Flux<Message> requestChannel(Message message, Publisher<Message> payloads) {
+  public Flux<Message> requestChannel(Message message, Publisher<Message> messages) {
     try {
       String serviceName = service(message.metadata());
 
@@ -190,7 +190,7 @@ public final class RSocketRpcHandler implements RSocketHandler {
             message.release();
             return Flux.error(new RpcException(NO_DEFAULT_ZERO_SERVICES_MESSAGE));
           case 1:
-            return defaultService.requestChannel(message, payloads);
+            return defaultService.requestChannel(message, messages);
           default:
             message.release();
             return Flux.error(new RpcException(NO_DEFAULT_MULTIPLE_SERVICES_MESSAGE));
@@ -203,7 +203,7 @@ public final class RSocketRpcHandler implements RSocketHandler {
         return Flux.error(new RpcException(serviceName));
       }
 
-      return rSocketService.requestChannel(message, payloads);
+      return rSocketService.requestChannel(message, messages);
     } catch (Throwable t) {
       ReferenceCountUtil.safeRelease(message);
       return Flux.error(t);

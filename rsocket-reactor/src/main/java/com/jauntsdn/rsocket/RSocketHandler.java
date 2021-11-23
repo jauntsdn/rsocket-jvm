@@ -21,7 +21,7 @@ import reactor.core.publisher.Flux;
 
 public interface RSocketHandler extends RSocket {
 
-  default Flux<Message> requestChannel(Message message, Publisher<Message> payloads) {
-    return requestChannel(payloads);
+  default Flux<Message> requestChannel(Message message, Publisher<Message> messages) {
+    return requestChannel(messages);
   }
 }

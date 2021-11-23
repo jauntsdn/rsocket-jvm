@@ -1,5 +1,17 @@
 /*
- * Copyright 2020 - present Maksym Ostroverkhov.
+ * Copyright 2021 - present Maksym Ostroverkhov.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.jauntsdn.rsocket;
@@ -7,21 +19,9 @@ package com.jauntsdn.rsocket;
 import io.helidon.common.reactive.Multi;
 import java.util.concurrent.Flow;
 
-/**
- * Extends the {@link RSocket} that allows an implementer to peek at the first request payload of a
- * channel.
- */
 public interface RSocketHandler extends RSocket {
-  /**
-   * Implement this method to peak at the first payload of the incoming request stream without
-   * having to subscribe to Publish&lt;Payload&gt; payloads
-   *
-   * @param message First payload in the stream - this is the same payload as the first payload in
-   *     Publisher&lt;Payload&gt; payloads
-   * @param payloads Stream of request payloads.
-   * @return Stream of response payloads.
-   */
-  default Multi<Message> requestChannel(Message message, Flow.Publisher<Message> payloads) {
-    return requestChannel(payloads);
+
+  default Multi<Message> requestChannel(Message message, Flow.Publisher<Message> messages) {
+    return requestChannel(messages);
   }
 }
