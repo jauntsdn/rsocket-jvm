@@ -33,6 +33,6 @@ public interface RSocketRpcService extends RSocketHandler {
 
   interface Factory<T extends RSocketRpcService> {
 
-    T withLifecycle(RSocket rSocket);
+    T withLifecycle(Closeable requester);
   }
 }

@@ -58,10 +58,6 @@ public interface RSocket extends Availability, Closeable {
     return Optional.empty();
   }
 
-  default Attributes attributes() {
-    return Attributes.EMPTY;
-  }
-
   @FunctionalInterface
   interface Interceptor extends Function<RSocket, RSocket> {}
 }

@@ -30,4 +30,8 @@ public interface Closeable extends GracefulCloseable {
   default void dispose(String reason, boolean isGraceful) {
     dispose();
   }
+
+  default Attributes attributes() {
+    return Attributes.EMPTY;
+  }
 }
