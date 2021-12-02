@@ -19,7 +19,7 @@ public interface RSocketRpcService extends RSocketHandler {
         new UnsupportedOperationException("RSocketRpcService: metadata-push is not supported"));
   }
 
-  interface Factory<T extends RSocketRpcService> {
+  interface Factory<T extends RSocketHandler> {
 
     T withLifecycle(Closeable requester);
   }

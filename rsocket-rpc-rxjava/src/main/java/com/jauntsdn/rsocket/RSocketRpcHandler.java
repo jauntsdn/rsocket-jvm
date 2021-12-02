@@ -42,11 +42,25 @@ public final class RSocketRpcHandler implements RSocketHandler {
   private final CompletableFuture<Void> onClose = new CompletableFuture<>();
   private final Consumer<Throwable> errorConsumer;
 
-  public RSocketRpcHandler(RSocketRpcService... rSocketServices) {
-    this(null, rSocketServices);
+  public static RSocketRpcHandler create(RSocketRpcService... rSocketServices) {
+    return new RSocketRpcHandler(null, rSocketServices);
   }
 
-  public RSocketRpcHandler(
+  public static RSocketRpcHandler create(
+      Consumer<Throwable> errorConsumer, RSocketRpcService... rSocketServices) {
+    return new RSocketRpcHandler(null, rSocketServices);
+  }
+
+  public static Factory create(RSocketRpcService.Factory<?>... rSocketServices) {
+    return new Factory(null, rSocketServices);
+  }
+
+  public static Factory create(
+      Consumer<Throwable> errorConsumer, RSocketRpcService.Factory<?>... rSocketServices) {
+    return new Factory(errorConsumer, rSocketServices);
+  }
+
+  RSocketRpcHandler(
       @Nullable Consumer<Throwable> errorConsumer, RSocketRpcService... rSocketServices) {
     this.errorConsumer = errorConsumer;
     Objects.requireNonNull(rSocketServices, "rSocketServices");
@@ -255,5 +269,37 @@ public final class RSocketRpcHandler implements RSocketHandler {
     long header = Rpc.RpcMetadata.header(metadata);
     int flags = Rpc.RpcMetadata.flags(header);
     return Rpc.RpcMetadata.service(metadata, header, flags);
+  }
+
+  public static final class Factory implements RSocketRpcService.Factory<RSocketRpcHandler> {
+    private final Consumer<Throwable> errorConsumer;
+    private final RSocketRpcService.Factory<?>[] serviceFactories;
+
+    Factory(
+        @Nullable Consumer<Throwable> errorConsumer,
+        RSocketRpcService.Factory<?>... serviceFactories) {
+      this.errorConsumer = errorConsumer;
+      this.serviceFactories = Objects.requireNonNull(serviceFactories, "serviceFactories");
+    }
+
+    @Override
+    public RSocketRpcHandler withLifecycle(Closeable requester) {
+      RSocketRpcService.Factory<?>[] factories = serviceFactories;
+      RSocketRpcService[] services = new RSocketRpcService[factories.length];
+      for (int i = 0; i < factories.length; i++) {
+        RSocketRpcService.Factory<?> factory = factories[i];
+        RSocketHandler handler = factory.withLifecycle(requester);
+        if (handler instanceof RSocketRpcService) {
+          services[i++] = (RSocketRpcService) handler;
+        } else {
+          throw new IllegalArgumentException(
+              "RpcService.Factory "
+                  + factory.getClass()
+                  + " created non - RSocketRpcService: "
+                  + handler.getClass());
+        }
+      }
+      return new RSocketRpcHandler(errorConsumer, services);
+    }
   }
 }
