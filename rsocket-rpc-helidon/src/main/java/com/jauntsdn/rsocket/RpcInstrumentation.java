@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 - present Maksym Ostroverkhov.
+ * Copyright 2020 - present Maksym Ostroverkhov.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,4 +16,15 @@
 
 package com.jauntsdn.rsocket;
 
-public interface RSocketHandler extends RSocket, MessageStreamsHandler {}
+import io.helidon.common.reactive.Single;
+import java.util.concurrent.Flow;
+import java.util.function.Function;
+
+public interface RpcInstrumentation {
+
+  <T> Function<? super Flow.Publisher<T>, ? extends Flow.Publisher<T>> instrumentMulti(
+      String role, String service, String method, boolean isStream);
+
+  <T> Function<? super Single<T>, ? extends Single<T>> instrumentSingle(
+      String role, String service, String method);
+}

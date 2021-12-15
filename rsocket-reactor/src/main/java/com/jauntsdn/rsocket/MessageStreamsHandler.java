@@ -16,15 +16,12 @@
 
 package com.jauntsdn.rsocket;
 
-import io.helidon.common.reactive.Single;
-import java.util.concurrent.Flow;
-import java.util.function.Function;
+import org.reactivestreams.Publisher;
+import reactor.core.publisher.Flux;
 
-public interface RSocketRpcInstrumentation {
+public interface MessageStreamsHandler extends MessageStreams {
 
-  <T> Function<? super Flow.Publisher<T>, ? extends Flow.Publisher<T>> instrumentMulti(
-      String role, String service, String method, boolean isStream);
-
-  <T> Function<? super Single<T>, ? extends Single<T>> instrumentSingle(
-      String role, String service, String method);
+  default Flux<Message> requestChannel(Message message, Publisher<Message> messages) {
+    return requestChannel(messages);
+  }
 }

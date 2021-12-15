@@ -23,10 +23,10 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Scheduler;
 
-public class RSocketProxy implements RSocket {
-  protected final RSocket source;
+public class RSocketProxy implements RSocket, RSocketHandler {
+  protected final MessageStreams source;
 
-  public RSocketProxy(RSocket source) {
+  public RSocketProxy(MessageStreams source) {
     this.source = source;
   }
 
@@ -51,13 +51,12 @@ public class RSocketProxy implements RSocket {
   }
 
   @Override
-  public Mono<Void> metadataPush(Message message) {
-    return source.metadataPush(message);
-  }
-
-  @Override
-  public double availability(int rank) {
-    return source.availability(rank);
+  public Flux<Message> requestChannel(Message message, Publisher<Message> messages) {
+    MessageStreams s = source;
+    if (s instanceof MessageStreamsHandler) {
+      return ((MessageStreamsHandler) s).requestChannel(message, messages);
+    }
+    return s.requestChannel(messages);
   }
 
   @Override
@@ -98,5 +97,26 @@ public class RSocketProxy implements RSocket {
   @Override
   public Attributes attributes() {
     return source.attributes();
+  }
+
+  @Override
+  public Mono<Void> metadataPush(Message message) {
+    MessageStreams s = source;
+    if (s instanceof RSocket) {
+      return ((RSocket) s).metadataPush(message);
+    }
+    message.release();
+    return Mono.error(
+        new UnsupportedOperationException(
+            "metadata-push is not supported by source: " + s.getClass().getName()));
+  }
+
+  @Override
+  public double availability(int rank) {
+    MessageStreams s = source;
+    if (s instanceof RSocket) {
+      return ((RSocket) s).availability(rank);
+    }
+    return s.isDisposed() ? 0.0 : 1.0;
   }
 }

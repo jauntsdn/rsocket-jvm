@@ -16,16 +16,14 @@
 
 package com.jauntsdn.rsocket;
 
-import io.reactivex.rxjava3.core.CompletableTransformer;
-import io.reactivex.rxjava3.core.FlowableTransformer;
-import io.reactivex.rxjava3.core.SingleTransformer;
+public interface RpcService extends MessageStreamsHandler {
 
-public interface RSocketRpcInstrumentation {
+  String service();
 
-  CompletableTransformer instrumentCompletable(String role, String service, String method);
+  Class<?> serviceType();
 
-  <T> SingleTransformer<T, T> instrumentSingle(String role, String service, String method);
+  interface Factory<T extends MessageStreamsHandler> {
 
-  <T> FlowableTransformer<T, T> instrumentFlowable(
-      String role, String service, String method, boolean isStream);
+    T withLifecycle(Closeable requester);
+  }
 }

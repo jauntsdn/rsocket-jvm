@@ -23,10 +23,10 @@ import java.util.Optional;
 import java.util.concurrent.Flow;
 import java.util.concurrent.ScheduledExecutorService;
 
-public class RSocketProxy implements RSocket {
-  protected final RSocket source;
+public class RSocketProxy implements RSocket, RSocketHandler {
+  protected final MessageStreams source;
 
-  public RSocketProxy(RSocket source) {
+  public RSocketProxy(MessageStreams source) {
     this.source = source;
   }
 
@@ -51,18 +51,17 @@ public class RSocketProxy implements RSocket {
   }
 
   @Override
-  public Single<Void> metadataPush(Message message) {
-    return source.metadataPush(message);
+  public Multi<Message> requestChannel(Message message, Flow.Publisher<Message> messages) {
+    MessageStreams s = source;
+    if (s instanceof MessageStreamsHandler) {
+      return ((MessageStreamsHandler) s).requestChannel(message, messages);
+    }
+    return s.requestChannel(messages);
   }
 
   @Override
   public Optional<Message.Factory> messageFactory() {
     return source.messageFactory();
-  }
-
-  @Override
-  public double availability(int rank) {
-    return source.availability(rank);
   }
 
   @Override
@@ -98,5 +97,26 @@ public class RSocketProxy implements RSocket {
   @Override
   public Attributes attributes() {
     return source.attributes();
+  }
+
+  @Override
+  public Single<Void> metadataPush(Message message) {
+    MessageStreams s = source;
+    if (s instanceof RSocket) {
+      return ((RSocket) s).metadataPush(message);
+    }
+    message.release();
+    return Single.error(
+        new UnsupportedOperationException(
+            "metadata-push is not supported by source: " + s.getClass().getName()));
+  }
+
+  @Override
+  public double availability(int rank) {
+    MessageStreams s = source;
+    if (s instanceof RSocket) {
+      return ((RSocket) s).availability(rank);
+    }
+    return s.isDisposed() ? 0.0 : 1.0;
   }
 }

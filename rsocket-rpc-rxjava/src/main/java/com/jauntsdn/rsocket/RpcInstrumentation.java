@@ -16,23 +16,16 @@
 
 package com.jauntsdn.rsocket;
 
-import io.helidon.common.reactive.Single;
+import io.reactivex.rxjava3.core.CompletableTransformer;
+import io.reactivex.rxjava3.core.FlowableTransformer;
+import io.reactivex.rxjava3.core.SingleTransformer;
 
-public interface RSocketRpcService extends RSocketHandler {
+public interface RpcInstrumentation {
 
-  String service();
+  CompletableTransformer instrumentCompletable(String role, String service, String method);
 
-  Class<?> serviceType();
+  <T> SingleTransformer<T, T> instrumentSingle(String role, String service, String method);
 
-  @Override
-  default Single<Void> metadataPush(Message message) {
-    message.release();
-    return Single.error(
-        new UnsupportedOperationException("RSocketRpcService: metadata-push is not supported"));
-  }
-
-  interface Factory<T extends RSocketHandler> {
-
-    T withLifecycle(Closeable requester);
-  }
+  <T> FlowableTransformer<T, T> instrumentFlowable(
+      String role, String service, String method, boolean isStream);
 }

@@ -16,29 +16,12 @@
 
 package com.jauntsdn.rsocket;
 
-import io.helidon.common.reactive.Multi;
 import io.helidon.common.reactive.Single;
-import io.netty.buffer.ByteBufAllocator;
-import java.util.Optional;
-import java.util.concurrent.Flow;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.function.Function;
 
-public interface RSocket extends Availability, Closeable {
-
-  Single<Void> fireAndForget(Message message);
-
-  Single<Message> requestResponse(Message message);
-
-  Multi<Message> requestStream(Message message);
-
-  Multi<Message> requestChannel(Flow.Publisher<Message> messages);
+public interface RSocket extends MessageStreams, Availability {
 
   Single<Void> metadataPush(Message message);
-
-  default Optional<Message.Factory> messageFactory() {
-    return Optional.empty();
-  }
 
   @Override
   default double availability(int rank) {
@@ -50,14 +33,13 @@ public interface RSocket extends Availability, Closeable {
     return availability(0);
   }
 
-  default Optional<ScheduledExecutorService> scheduler() {
-    return Optional.empty();
-  }
-
-  default Optional<ByteBufAllocator> allocator() {
-    return Optional.empty();
-  }
-
   @FunctionalInterface
   interface Interceptor extends Function<RSocket, RSocket> {}
+
+  static RSocket from(MessageStreams messageStreams) {
+    if (messageStreams instanceof RSocket) {
+      return (RSocket) messageStreams;
+    }
+    return new RSocketProxy(messageStreams);
+  }
 }

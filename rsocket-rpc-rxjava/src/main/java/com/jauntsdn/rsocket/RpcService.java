@@ -16,22 +16,13 @@
 
 package com.jauntsdn.rsocket;
 
-import reactor.core.publisher.Mono;
-
-public interface RSocketRpcService extends RSocketHandler {
+public interface RpcService extends MessageStreamsHandler {
 
   String service();
 
   Class<?> serviceType();
 
-  @Override
-  default Mono<Void> metadataPush(Message message) {
-    message.release();
-    return Mono.error(
-        new UnsupportedOperationException("RSocketRpcService: metadata-push is not supported"));
-  }
-
-  interface Factory<T extends RSocketHandler> {
+  interface Factory<T extends MessageStreamsHandler> {
 
     T withLifecycle(Closeable requester);
   }

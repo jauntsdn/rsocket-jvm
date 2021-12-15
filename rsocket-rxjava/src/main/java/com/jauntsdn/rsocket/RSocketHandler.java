@@ -16,12 +16,4 @@
 
 package com.jauntsdn.rsocket;
 
-import io.reactivex.rxjava3.core.Flowable;
-import org.reactivestreams.Publisher;
-
-public interface RSocketHandler extends RSocket {
-
-  default Flowable<Message> requestChannel(Message message, Publisher<Message> messages) {
-    return requestChannel(messages);
-  }
-}
+public interface RSocketHandler extends RSocket, MessageStreamsHandler {}
