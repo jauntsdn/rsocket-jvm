@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 - present Maksym Ostroverkhov.
+ * Copyright 2020 - present Maksym Ostroverkhov.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,4 +16,16 @@
 
 package com.jauntsdn.rsocket;
 
-public interface RSocketHandler extends RSocket, MessageStreamsHandler {}
+import io.reactivex.rxjava3.core.CompletableTransformer;
+import io.reactivex.rxjava3.core.FlowableTransformer;
+import io.reactivex.rxjava3.core.SingleTransformer;
+
+public interface RpcInstrumentation {
+
+  CompletableTransformer instrumentCompletable(String role, String service, String method);
+
+  <T> SingleTransformer<T, T> instrumentSingle(String role, String service, String method);
+
+  <T> FlowableTransformer<T, T> instrumentFlowable(
+      String role, String service, String method, boolean isStream);
+}

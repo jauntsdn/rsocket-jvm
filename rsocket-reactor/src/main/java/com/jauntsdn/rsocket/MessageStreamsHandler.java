@@ -16,11 +16,12 @@
 
 package com.jauntsdn.rsocket;
 
-import java.util.function.Function;
 import org.reactivestreams.Publisher;
+import reactor.core.publisher.Flux;
 
-public interface RSocketRpcInstrumentation {
+public interface MessageStreamsHandler extends MessageStreams {
 
-  <T> Function<? super Publisher<T>, ? extends Publisher<T>> instrument(
-      String role, String service, String method, boolean isStream);
+  default Flux<Message> requestChannel(Message message, Publisher<Message> messages) {
+    return requestChannel(messages);
+  }
 }

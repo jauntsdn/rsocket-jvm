@@ -1,25 +1,28 @@
+![Maven Central](https://img.shields.io/maven-central/v/com.jauntsdn.rsocket/rsocket-bom)
+
 # jauntsdn.com / RSocket-JVM
 
-[RSocket](https://jauntsdn.com/post/rsocket-summary/) is low latency/high throughput L5 network protocol, 
-intended for high-performance services communication. It is transport agnostic, and runs on top 
-of any reliable byte stream transport.
+RSocket-JVM is [very fast](https://jauntsdn.com/post/rsocket-summary/) (millions of messages per core with each interaction) alternative to 
+projectreactor-only RSocket/RSocket-java from "Reactive Foundation" -
+which is plagued by number of performance and security [problems](https://jauntsdn.com/post/rsocket-vs-spring/).
 
 This repository hosts API part of RSocket-JVM - suite of libraries for fast interprocess/network communication using major
-Reactive Streams impls.  
+Reactive Streams implementations.  
+
+RSocket is low latency/high throughput L5 network protocol, 
+intended for high-performance services communication. It is transport agnostic, and runs on top 
+of any reliable byte stream transport.
 
 RSocket-JVM includes RSocket-RPC: remote procedure call system on top of Protocol Buffers.
 
 ### Motivation / Purpose
 
-RSocket-JVM is [very fast](https://jauntsdn.com/post/rsocket-vs-spring/) alternative to 
-projectreactor-only RSocket/RSocket-java from "Reactive Foundation" -
-which is plagued by number of performance and security [problems](https://jauntsdn.com/post/rsocket-million-streams-2/).
-
 **Multiple vendor libraries**. [Shared protocol core](https://jauntsdn.com/post/rsocket-jvm/) with minimal dependencies 
-(netty-buffer only) streamlined development process for each next vendor library.   
+(netty-buffer only) streamline development process for each next vendor library.   
   
 **Shared transports**. Message byte transports are based on `rsocket-messages` and netty only 
-so are usable by each vendor library. Transports are considered part of RSocket-JVM runtime.
+so usable by each vendor library. Currently transports are comprised of TCP, unix & websocket-over-http2, and 
+are considered part of RSocket-JVM runtime.
 
 **Non-intrusive**. API & runtime are clearly split so from end-user perspective there is 
 only defined set of basic interactions on buffers/messages:
@@ -29,6 +32,10 @@ only defined set of basic interactions on buffers/messages:
   Publisher<Message> requestChannel(Publisher<Message> messages);
   Publisher<Void> fireAndForget(Message message);
 ```
+
+**GRPC compatible**. All implementations are directly compatible with GRPC via RSocket-RPC & GRPC transport.
+GRPC clients can access such services without separate "gateway" binaries and awkward IDL sharing schemes.
+
 ### Project-reactor, rxjava, helidon
 
 RSocket-JVM is currently comprised of RSocket-rxjava (rxjava3), RSocket-reactor (project-reactor), and RSocket-helidon (helidon-commons-reactive).
@@ -43,7 +50,7 @@ Each vendor library has RSocket-RPC API module accompanied by compiler binary.
 
 ### Examples
 
-[RSocket-jvm-interop-demo]().
+[RSocket-jvm-interop-examples](https://github.com/jauntsdn/rsocket-jvm-interop-examples).
 
 ## Build
 

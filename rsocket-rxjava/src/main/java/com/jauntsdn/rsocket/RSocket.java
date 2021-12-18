@@ -16,30 +16,12 @@
 
 package com.jauntsdn.rsocket;
 
-import io.netty.buffer.ByteBufAllocator;
 import io.reactivex.rxjava3.core.Completable;
-import io.reactivex.rxjava3.core.Flowable;
-import io.reactivex.rxjava3.core.Scheduler;
-import io.reactivex.rxjava3.core.Single;
-import java.util.Optional;
 import java.util.function.Function;
-import org.reactivestreams.Publisher;
 
-public interface RSocket extends Availability, Closeable {
-
-  Completable fireAndForget(Message message);
-
-  Single<Message> requestResponse(Message message);
-
-  Flowable<Message> requestStream(Message message);
-
-  Flowable<Message> requestChannel(Publisher<Message> messages);
+public interface RSocket extends MessageStreams, Availability {
 
   Completable metadataPush(Message message);
-
-  default Optional<Message.Factory> messageFactory() {
-    return Optional.empty();
-  }
 
   @Override
   default double availability(int rank) {
@@ -51,18 +33,13 @@ public interface RSocket extends Availability, Closeable {
     return availability(0);
   }
 
-  default Optional<Scheduler> scheduler() {
-    return Optional.empty();
-  }
-
-  default Optional<ByteBufAllocator> allocator() {
-    return Optional.empty();
-  }
-
-  default Attributes attributes() {
-    return Attributes.EMPTY;
-  }
-
   @FunctionalInterface
   interface Interceptor extends Function<RSocket, RSocket> {}
+
+  static RSocket from(MessageStreams messageStreams) {
+    if (messageStreams instanceof RSocket) {
+      return (RSocket) messageStreams;
+    }
+    return new RSocketProxy(messageStreams);
+  }
 }

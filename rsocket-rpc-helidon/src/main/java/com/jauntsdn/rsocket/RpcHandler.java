@@ -1,5 +1,17 @@
 /*
  * Copyright 2020 - present Maksym Ostroverkhov.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.jauntsdn.rsocket;
@@ -18,26 +30,38 @@ import java.util.concurrent.Flow;
 import java.util.function.Consumer;
 import javax.annotation.Nullable;
 
-public final class RSocketRpcHandler implements RSocketHandler {
+public final class RpcHandler implements MessageStreamsHandler {
   private static final String NO_DEFAULT_ZERO_SERVICES_MESSAGE =
-      "RSocketRpcHandler: no default service because 0 services registered";
+      "RpcHandler: no default service because 0 services registered";
   private static final String NO_DEFAULT_MULTIPLE_SERVICES_MESSAGE =
-      "RSocketRpcHandler: no default service because more than 1 service registered";
+      "RpcHandler: no default service because more than 1 service registered";
 
-  private final Map<String, RSocketRpcService> services;
-  private final RSocketRpcService defaultService;
+  private final Map<String, RpcService> services;
+  private final RpcService defaultService;
   private final CompletableFuture<Void> onClose = new CompletableFuture<>();
   private final Consumer<Throwable> errorConsumer;
 
-  public RSocketRpcHandler(RSocketRpcService... rSocketServices) {
-    this(null, rSocketServices);
+  public static RpcHandler create(RpcService... rpcServices) {
+    return new RpcHandler(null, rpcServices);
   }
 
-  public RSocketRpcHandler(
-      @Nullable Consumer<Throwable> errorConsumer, RSocketRpcService... rSocketServices) {
+  public static RpcHandler create(Consumer<Throwable> errorConsumer, RpcService... rpcServices) {
+    return new RpcHandler(null, rpcServices);
+  }
+
+  public static Factory create(RpcService.Factory<?>... rpcServices) {
+    return new Factory(null, rpcServices);
+  }
+
+  public static Factory create(
+      Consumer<Throwable> errorConsumer, RpcService.Factory<?>... rpcServices) {
+    return new Factory(errorConsumer, rpcServices);
+  }
+
+  RpcHandler(@Nullable Consumer<Throwable> errorConsumer, RpcService... rpcServices) {
     this.errorConsumer = errorConsumer;
-    Objects.requireNonNull(rSocketServices, "rSocketServices");
-    int length = rSocketServices.length;
+    Objects.requireNonNull(rpcServices, "rpcServices");
+    int length = rpcServices.length;
     switch (length) {
       case 0:
         {
@@ -47,7 +71,7 @@ public final class RSocketRpcHandler implements RSocketHandler {
         break;
       case 1:
         {
-          RSocketRpcService service = rSocketServices[0];
+          RpcService service = rpcServices[0];
           defaultService = service;
           services = Collections.singletonMap(service.service(), service);
           break;
@@ -55,10 +79,10 @@ public final class RSocketRpcHandler implements RSocketHandler {
       default:
         {
           defaultService = null;
-          Map<String, RSocketRpcService> svcs = services = new HashMap<>(length);
-          for (RSocketRpcService rSocketService : rSocketServices) {
-            String service = rSocketService.service();
-            svcs.put(service, rSocketService);
+          Map<String, RpcService> svcs = services = new HashMap<>(length);
+          for (RpcService rpcService : rpcServices) {
+            String service = rpcService.service();
+            svcs.put(service, rpcService);
           }
         }
     }
@@ -83,13 +107,13 @@ public final class RSocketRpcHandler implements RSocketHandler {
         }
       }
 
-      RSocketRpcService rSocketService = services.get(serviceName);
-      if (rSocketService == null) {
+      RpcService rpcService = services.get(serviceName);
+      if (rpcService == null) {
         message.release();
         return Single.error(new RpcException(serviceName));
       }
 
-      return rSocketService.fireAndForget(message);
+      return rpcService.fireAndForget(message);
     } catch (Throwable t) {
       ReferenceCountUtil.safeRelease(message);
       return Single.error(t);
@@ -115,12 +139,12 @@ public final class RSocketRpcHandler implements RSocketHandler {
         }
       }
 
-      RSocketRpcService rSocketService = services.get(serviceName);
-      if (rSocketService == null) {
+      RpcService rpcService = services.get(serviceName);
+      if (rpcService == null) {
         message.release();
         return Single.error(new RpcException(serviceName));
       }
-      return rSocketService.requestResponse(message);
+      return rpcService.requestResponse(message);
     } catch (Throwable t) {
       ReferenceCountUtil.safeRelease(message);
       return Single.error(t);
@@ -146,13 +170,13 @@ public final class RSocketRpcHandler implements RSocketHandler {
         }
       }
 
-      RSocketRpcService rSocketService = services.get(serviceName);
-      if (rSocketService == null) {
+      RpcService rpcService = services.get(serviceName);
+      if (rpcService == null) {
         message.release();
         return Multi.error(new RpcException(serviceName));
       }
 
-      return rSocketService.requestStream(message);
+      return rpcService.requestStream(message);
     } catch (Throwable t) {
       ReferenceCountUtil.safeRelease(message);
       return Multi.error(t);
@@ -160,14 +184,13 @@ public final class RSocketRpcHandler implements RSocketHandler {
   }
 
   @Override
-  public Multi<Message> requestChannel(Flow.Publisher<Message> payloads) {
+  public Multi<Message> requestChannel(Flow.Publisher<Message> messages) {
     return Multi.error(
-        new RpcException(
-            "RSocketRpcHandler: unsupported method: requestChannel(Publisher<Payload>)"));
+        new RpcException("RpcHandler: unsupported method: requestChannel(Publisher<Payload>)"));
   }
 
   @Override
-  public Multi<Message> requestChannel(Message message, Flow.Publisher<Message> payloads) {
+  public Multi<Message> requestChannel(Message message, Flow.Publisher<Message> messages) {
     try {
       String serviceName = service(message.metadata());
 
@@ -178,20 +201,20 @@ public final class RSocketRpcHandler implements RSocketHandler {
             message.release();
             return Multi.error(new RpcException(NO_DEFAULT_ZERO_SERVICES_MESSAGE));
           case 1:
-            return defaultService.requestChannel(message, payloads);
+            return defaultService.requestChannel(message, messages);
           default:
             message.release();
             return Multi.error(new RpcException(NO_DEFAULT_MULTIPLE_SERVICES_MESSAGE));
         }
       }
 
-      RSocketRpcService rSocketService = services.get(serviceName);
-      if (rSocketService == null) {
+      RpcService rpcService = services.get(serviceName);
+      if (rpcService == null) {
         message.release();
         return Multi.error(new RpcException(serviceName));
       }
 
-      return rSocketService.requestChannel(message, payloads);
+      return rpcService.requestChannel(message, messages);
     } catch (Throwable t) {
       ReferenceCountUtil.safeRelease(message);
       return Multi.error(t);
@@ -199,29 +222,22 @@ public final class RSocketRpcHandler implements RSocketHandler {
   }
 
   @Override
-  public Single<Void> metadataPush(Message message) {
-    message.release();
-    return Single.error(new RpcException("RSocketRpcHandler: unsupported method: metadataPush"));
-  }
-
-  @Override
   public void dispose() {
-    Map<String, RSocketRpcService> svcs = services;
+    Map<String, RpcService> svcs = services;
     if (svcs.isEmpty()) {
       return;
     }
     svcs.forEach(
-        (serviceName, rSocketRpcService) -> {
+        (serviceName, rpcService) -> {
           try {
-            rSocketRpcService.dispose();
+            rpcService.dispose();
           } catch (Throwable t) {
             if (t instanceof Error) {
               throw t;
             }
             Consumer<Throwable> c = errorConsumer;
             if (c != null) {
-              c.accept(
-                  new RpcException("RSocket-RPC service " + serviceName + " dispose error", t));
+              c.accept(new RpcException("RPC service " + serviceName + " dispose error", t));
             }
           }
         });
@@ -242,5 +258,36 @@ public final class RSocketRpcHandler implements RSocketHandler {
     long header = Rpc.RpcMetadata.header(metadata);
     int flags = Rpc.RpcMetadata.flags(header);
     return Rpc.RpcMetadata.service(metadata, header, flags);
+  }
+
+  public static final class Factory implements RpcService.Factory<RpcHandler> {
+    private final Consumer<Throwable> errorConsumer;
+    private final RpcService.Factory<?>[] serviceFactories;
+
+    Factory(
+        @Nullable Consumer<Throwable> errorConsumer, RpcService.Factory<?>... serviceFactories) {
+      this.errorConsumer = errorConsumer;
+      this.serviceFactories = Objects.requireNonNull(serviceFactories, "serviceFactories");
+    }
+
+    @Override
+    public RpcHandler withLifecycle(Closeable requester) {
+      RpcService.Factory<?>[] factories = serviceFactories;
+      RpcService[] services = new RpcService[factories.length];
+      for (int i = 0; i < factories.length; i++) {
+        RpcService.Factory<?> factory = factories[i];
+        MessageStreamsHandler handler = factory.withLifecycle(requester);
+        if (handler instanceof RpcService) {
+          services[i++] = (RpcService) handler;
+        } else {
+          throw new IllegalArgumentException(
+              "RpcService.Factory "
+                  + factory.getClass()
+                  + " created non - RpcService: "
+                  + handler.getClass());
+        }
+      }
+      return new RpcHandler(errorConsumer, services);
+    }
   }
 }

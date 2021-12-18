@@ -20,6 +20,8 @@ public interface Attributes {
   String EXTERNAL_METADATA_SIZE = "external_metadata_size";
   String EVENT_LOOP_ONLY = "event_loop_only";
   String RPC_CODEC = "rpc_codec";
+  String RPC_INSTRUMENTATION = "rpc_instrumentation";
+  String ALLOCATOR = "allocator";
 
   int intAttr(String key);
 

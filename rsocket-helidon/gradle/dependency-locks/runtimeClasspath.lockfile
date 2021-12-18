@@ -5,6 +5,6 @@ io.helidon.common:helidon-common-mapper:2.3.4
 io.helidon.common:helidon-common-reactive:2.3.4
 io.helidon.common:helidon-common-service-loader:2.3.4
 io.helidon.common:helidon-common:2.3.4
-io.netty:netty-buffer:4.1.69.Final
-io.netty:netty-common:4.1.69.Final
+io.netty:netty-buffer:4.1.72.Final
+io.netty:netty-common:4.1.72.Final
 jakarta.annotation:jakarta.annotation-api:1.3.5

@@ -16,22 +16,32 @@
 
 package com.jauntsdn.rsocket;
 
+import io.netty.buffer.ByteBufAllocator;
+import java.util.Optional;
+import org.reactivestreams.Publisher;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Scheduler;
 
-public interface Closeable extends GracefulCloseable {
+public interface MessageStreams extends Closeable {
 
-  Mono<Void> onClose();
+  Mono<Void> fireAndForget(Message message);
 
-  void dispose();
+  Mono<Message> requestResponse(Message message);
 
-  boolean isDisposed();
+  Flux<Message> requestStream(Message message);
 
-  @Override
-  default void dispose(String reason, boolean isGraceful) {
-    dispose();
+  Flux<Message> requestChannel(Publisher<Message> messages);
+
+  default Optional<Message.Factory> messageFactory() {
+    return Optional.empty();
   }
 
-  default Attributes attributes() {
-    return Attributes.EMPTY;
+  default Optional<Scheduler> scheduler() {
+    return Optional.empty();
+  }
+
+  default Optional<ByteBufAllocator> allocator() {
+    return Optional.empty();
   }
 }

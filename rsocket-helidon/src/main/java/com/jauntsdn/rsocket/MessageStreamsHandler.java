@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 - present Maksym Ostroverkhov.
+ * Copyright 2020 - present Maksym Ostroverkhov.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,4 +16,12 @@
 
 package com.jauntsdn.rsocket;
 
-public interface RSocketHandler extends RSocket, MessageStreamsHandler {}
+import io.helidon.common.reactive.Multi;
+import java.util.concurrent.Flow;
+
+public interface MessageStreamsHandler extends MessageStreams {
+
+  default Multi<Message> requestChannel(Message message, Flow.Publisher<Message> messages) {
+    return requestChannel(messages);
+  }
+}

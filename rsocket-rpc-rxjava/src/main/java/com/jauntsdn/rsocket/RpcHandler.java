@@ -31,26 +31,38 @@ import java.util.function.Consumer;
 import javax.annotation.Nullable;
 import org.reactivestreams.Publisher;
 
-public final class RSocketRpcHandler implements RSocketHandler {
+public final class RpcHandler implements MessageStreamsHandler {
   private static final String NO_DEFAULT_ZERO_SERVICES_MESSAGE =
-      "RSocketRpcHandler: no default service because 0 services registered";
+      "RpcHandler: no default service because 0 services registered";
   private static final String NO_DEFAULT_MULTIPLE_SERVICES_MESSAGE =
-      "RSocketRpcHandler: no default service because more than 1 service registered";
+      "RpcHandler: no default service because more than 1 service registered";
 
-  private final Map<String, RSocketRpcService> services;
-  private final RSocketRpcService defaultService;
+  private final Map<String, RpcService> services;
+  private final RpcService defaultService;
   private final CompletableFuture<Void> onClose = new CompletableFuture<>();
   private final Consumer<Throwable> errorConsumer;
 
-  public RSocketRpcHandler(RSocketRpcService... rSocketServices) {
-    this(null, rSocketServices);
+  public static RpcHandler create(RpcService... rpcServices) {
+    return new RpcHandler(null, rpcServices);
   }
 
-  public RSocketRpcHandler(
-      @Nullable Consumer<Throwable> errorConsumer, RSocketRpcService... rSocketServices) {
+  public static RpcHandler create(Consumer<Throwable> errorConsumer, RpcService... rpcServices) {
+    return new RpcHandler(null, rpcServices);
+  }
+
+  public static Factory create(RpcService.Factory<?>... rpcServices) {
+    return new Factory(null, rpcServices);
+  }
+
+  public static Factory create(
+      Consumer<Throwable> errorConsumer, RpcService.Factory<?>... rpcServices) {
+    return new Factory(errorConsumer, rpcServices);
+  }
+
+  RpcHandler(@Nullable Consumer<Throwable> errorConsumer, RpcService... rpcServices) {
     this.errorConsumer = errorConsumer;
-    Objects.requireNonNull(rSocketServices, "rSocketServices");
-    int length = rSocketServices.length;
+    Objects.requireNonNull(rpcServices, "rpcServices");
+    int length = rpcServices.length;
     switch (length) {
       case 0:
         {
@@ -60,7 +72,7 @@ public final class RSocketRpcHandler implements RSocketHandler {
         break;
       case 1:
         {
-          RSocketRpcService service = rSocketServices[0];
+          RpcService service = rpcServices[0];
           defaultService = service;
           services = Collections.singletonMap(service.service(), service);
           break;
@@ -68,10 +80,10 @@ public final class RSocketRpcHandler implements RSocketHandler {
       default:
         {
           defaultService = null;
-          Map<String, RSocketRpcService> svcs = services = new HashMap<>(length);
-          for (RSocketRpcService rSocketService : rSocketServices) {
-            String service = rSocketService.service();
-            svcs.put(service, rSocketService);
+          Map<String, RpcService> svcs = services = new HashMap<>(length);
+          for (RpcService rpcService : rpcServices) {
+            String service = rpcService.service();
+            svcs.put(service, rpcService);
           }
         }
     }
@@ -96,13 +108,13 @@ public final class RSocketRpcHandler implements RSocketHandler {
         }
       }
 
-      RSocketRpcService rSocketService = services.get(serviceName);
-      if (rSocketService == null) {
+      RpcService rpcService = services.get(serviceName);
+      if (rpcService == null) {
         message.release();
         return Completable.error(new RpcException(serviceName));
       }
 
-      return rSocketService.fireAndForget(message);
+      return rpcService.fireAndForget(message);
     } catch (Throwable t) {
       ReferenceCountUtil.safeRelease(message);
       return Completable.error(t);
@@ -128,12 +140,12 @@ public final class RSocketRpcHandler implements RSocketHandler {
         }
       }
 
-      RSocketRpcService rSocketService = services.get(serviceName);
-      if (rSocketService == null) {
+      RpcService rpcService = services.get(serviceName);
+      if (rpcService == null) {
         message.release();
         return Single.error(new RpcException(serviceName));
       }
-      return rSocketService.requestResponse(message);
+      return rpcService.requestResponse(message);
     } catch (Throwable t) {
       ReferenceCountUtil.safeRelease(message);
       return Single.error(t);
@@ -159,13 +171,13 @@ public final class RSocketRpcHandler implements RSocketHandler {
         }
       }
 
-      RSocketRpcService rSocketService = services.get(serviceName);
-      if (rSocketService == null) {
+      RpcService rpcService = services.get(serviceName);
+      if (rpcService == null) {
         message.release();
         return Flowable.error(new RpcException(serviceName));
       }
 
-      return rSocketService.requestStream(message);
+      return rpcService.requestStream(message);
     } catch (Throwable t) {
       ReferenceCountUtil.safeRelease(message);
       return Flowable.error(t);
@@ -175,8 +187,7 @@ public final class RSocketRpcHandler implements RSocketHandler {
   @Override
   public Flowable<Message> requestChannel(Publisher<Message> messages) {
     return Flowable.error(
-        new RpcException(
-            "RSocketRpcHandler: unsupported method: requestChannel(Publisher<Payload>)"));
+        new RpcException("RpcHandler: unsupported method: requestChannel(Publisher<Payload>)"));
   }
 
   @Override
@@ -198,13 +209,13 @@ public final class RSocketRpcHandler implements RSocketHandler {
         }
       }
 
-      RSocketRpcService rSocketService = services.get(serviceName);
-      if (rSocketService == null) {
+      RpcService rpcService = services.get(serviceName);
+      if (rpcService == null) {
         message.release();
         return Flowable.error(new RpcException(serviceName));
       }
 
-      return rSocketService.requestChannel(message, payloads);
+      return rpcService.requestChannel(message, payloads);
     } catch (Throwable t) {
       ReferenceCountUtil.safeRelease(message);
       return Flowable.error(t);
@@ -212,29 +223,22 @@ public final class RSocketRpcHandler implements RSocketHandler {
   }
 
   @Override
-  public Completable metadataPush(Message message) {
-    message.release();
-    return Completable.error(new RpcException("RSocketRpcHandler: metadataPush not implemented"));
-  }
-
-  @Override
   public void dispose() {
-    Map<String, RSocketRpcService> svcs = services;
+    Map<String, RpcService> svcs = services;
     if (svcs.isEmpty()) {
       return;
     }
     svcs.forEach(
-        (serviceName, rSocketRpcService) -> {
+        (serviceName, rpcService) -> {
           try {
-            rSocketRpcService.dispose();
+            rpcService.dispose();
           } catch (Throwable t) {
             if (t instanceof Error) {
               throw t;
             }
             Consumer<Throwable> c = errorConsumer;
             if (c != null) {
-              c.accept(
-                  new RpcException("RSocket-RPC service " + serviceName + " dispose error", t));
+              c.accept(new RpcException("RPC service " + serviceName + " dispose error", t));
             }
           }
         });
@@ -255,5 +259,36 @@ public final class RSocketRpcHandler implements RSocketHandler {
     long header = Rpc.RpcMetadata.header(metadata);
     int flags = Rpc.RpcMetadata.flags(header);
     return Rpc.RpcMetadata.service(metadata, header, flags);
+  }
+
+  public static final class Factory implements RpcService.Factory<RpcHandler> {
+    private final Consumer<Throwable> errorConsumer;
+    private final RpcService.Factory<?>[] serviceFactories;
+
+    Factory(
+        @Nullable Consumer<Throwable> errorConsumer, RpcService.Factory<?>... serviceFactories) {
+      this.errorConsumer = errorConsumer;
+      this.serviceFactories = Objects.requireNonNull(serviceFactories, "serviceFactories");
+    }
+
+    @Override
+    public RpcHandler withLifecycle(Closeable requester) {
+      RpcService.Factory<?>[] factories = serviceFactories;
+      RpcService[] services = new RpcService[factories.length];
+      for (int i = 0; i < factories.length; i++) {
+        RpcService.Factory<?> factory = factories[i];
+        MessageStreamsHandler handler = factory.withLifecycle(requester);
+        if (handler instanceof RpcService) {
+          services[i++] = (RpcService) handler;
+        } else {
+          throw new IllegalArgumentException(
+              "RpcService.Factory "
+                  + factory.getClass()
+                  + " created non - RpcService: "
+                  + handler.getClass());
+        }
+      }
+      return new RpcHandler(errorConsumer, services);
+    }
   }
 }
