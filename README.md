@@ -24,7 +24,7 @@ RSocket-JVM includes RSocket-RPC: remote procedure call system on top of Protoco
 so usable by each vendor library. Currently transports are comprised of TCP, unix & websocket-over-http2, and 
 are considered part of RSocket-JVM runtime.
 
-**Non-intrusive**. API & runtime are clearly split so from end-user perspective there is 
+**Non-intrusive**. API ([MessageStreams](https://github.com/jauntsdn/rsocket-jvm/blob/1.1.0/rsocket-reactor/src/main/java/com/jauntsdn/rsocket/MessageStreams.java)) & runtime ([RSocket](https://github.com/jauntsdn/rsocket-jvm/blob/1.1.0/rsocket-reactor/src/main/java/com/jauntsdn/rsocket/RSocket.java)) are clearly split so from end-user perspective there is 
 only defined set of basic interactions on buffers/messages:
 ```groovy
   Publisher<Message> requestResponse(Message message);
@@ -75,10 +75,10 @@ repositories {
 }
 
 dependencies {
-    implementation "com.jauntsdn.rsocket:rsocket-messages:1.0.0"
-    implementation "com.jauntsdn.rsocket:rsocket-rpc-idl:1.0.0"
-    implementation "com.jauntsdn.rsocket:rsocket-<VENDOR>:1.0.0"
-    implementation "com.jauntsdn.rsocket:rsocket-rpc-<VENDOR>:1.0.0"
+    implementation "com.jauntsdn.rsocket:rsocket-messages:1.1.0"
+    implementation "com.jauntsdn.rsocket:rsocket-rpc-idl:1.1.0"
+    implementation "com.jauntsdn.rsocket:rsocket-<VENDOR>:1.1.0"
+    implementation "com.jauntsdn.rsocket:rsocket-rpc-<VENDOR>:1.1.0"
 }
 ```
 
@@ -87,7 +87,7 @@ RSocket-RPC compiler binaries are for linux only
 protobuf {
      plugins {
           rsocketRpc {
-              artifact = "com.jauntsdn.rsocket:rsocket-rpc-<VENDOR>-compiler:1.0.0"
+              artifact = "com.jauntsdn.rsocket:rsocket-rpc-<VENDOR>-compiler:1.1.0"
           }
      }
 }
