@@ -17,6 +17,8 @@ include "rsocket-rxjava"
 include "rsocket-rpc-rxjava"
 include "rsocket-helidon"
 include "rsocket-rpc-helidon"
+include "rsocket-mutiny"
+include "rsocket-rpc-mutiny"
 include "rsocket-rpc-idl"
 include "rsocket-bom"
 
