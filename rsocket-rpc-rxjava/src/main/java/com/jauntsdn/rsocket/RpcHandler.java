@@ -226,6 +226,7 @@ public final class RpcHandler implements MessageStreamsHandler {
   public void dispose() {
     Map<String, RpcService> svcs = services;
     if (svcs.isEmpty()) {
+      onClose.complete(null);
       return;
     }
     svcs.forEach(
