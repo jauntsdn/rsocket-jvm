@@ -14,6 +14,8 @@ subprojects {
         dependencies {
             dependency "io.reactivex.rxjava3:rxjava:${rxjavaVersion}"
             dependency "io.helidon.common:helidon-common-reactive:${helidonCommonReactiveVersion}"
+            dependency "io.smallrye.reactive:mutiny:${mutinyVersion}"
+
             dependency "javax.inject:javax.inject:${javaxInjectVersion}"
             dependency "javax.annotation:javax.annotation-api:${javaxAnnotationVersion}"
             dependency "com.google.code.findbugs:jsr305:${jsr305Version}"

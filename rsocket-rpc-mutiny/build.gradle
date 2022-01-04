@@ -1,0 +1,19 @@
+/*
+ * Copyright 2020 - present Maksym Ostroverkhov.
+ */
+
+plugins {
+    id "java-library"
+    id "signing"
+    id "maven-publish"
+}
+
+description = "RSocket-rpc-smallrye-mutiny api library"
+
+dependencies {
+    api project(":rsocket-mutiny")
+    api "javax.inject:javax.inject"
+    api "javax.annotation:javax.annotation-api"
+
+    compileOnly "com.google.code.findbugs:jsr305"
+}

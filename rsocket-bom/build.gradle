@@ -23,6 +23,7 @@ dependencies {
 
         api "io.reactivex.rxjava3:rxjava:${rxjavaVersion}"
         api "io.helidon.common:helidon-common-reactive:${helidonCommonReactiveVersion}"
+        api "io.smallrye.reactive:mutiny:${mutinyVersion}"
         api "javax.inject:javax.inject:${javaxInjectVersion}"
         api "javax.annotation:javax.annotation-api:${javaxAnnotationVersion}"
         api "com.google.protobuf:protobuf-java:${protobufVersion}"
@@ -30,6 +31,7 @@ dependencies {
         api "com.jauntsdn.rsocket:rsocket-rpc-reactor-compiler:${version}"
         api "com.jauntsdn.rsocket:rsocket-rpc-rxjava-compiler:${version}"
         api "com.jauntsdn.rsocket:rsocket-rpc-helidon-compiler:${version}"
+        api "com.jauntsdn.rsocket:rsocket-rpc-mutiny-compiler:${version}"
         api "com.google.protobuf:protoc:${protobufVersion}"
     }
 }

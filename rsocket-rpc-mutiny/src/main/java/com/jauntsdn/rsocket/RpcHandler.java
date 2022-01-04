@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 - present Maksym Ostroverkhov.
+ * Copyright 2021 - present Maksym Ostroverkhov.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,18 +17,18 @@
 package com.jauntsdn.rsocket;
 
 import com.jauntsdn.rsocket.exceptions.RpcException;
-import io.helidon.common.reactive.Multi;
-import io.helidon.common.reactive.Single;
 import io.netty.buffer.ByteBuf;
 import io.netty.util.ReferenceCountUtil;
+import io.smallrye.mutiny.Multi;
+import io.smallrye.mutiny.Uni;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Flow;
 import java.util.function.Consumer;
 import javax.annotation.Nullable;
+import org.reactivestreams.Publisher;
 
 public final class RpcHandler implements MessageStreamsHandler {
   private static final String NO_DEFAULT_ZERO_SERVICES_MESSAGE =
@@ -38,7 +38,7 @@ public final class RpcHandler implements MessageStreamsHandler {
 
   private final Map<String, RpcService> services;
   private final RpcService defaultService;
-  private final CompletableFuture<Void> onClose = new CompletableFuture<>();
+  private final CompletableFuture<RpcHandler> onClose = new CompletableFuture<>();
   private final Consumer<Throwable> errorConsumer;
 
   public static RpcHandler create(RpcService... rpcServices) {
@@ -89,7 +89,7 @@ public final class RpcHandler implements MessageStreamsHandler {
   }
 
   @Override
-  public Single<Void> fireAndForget(Message message) {
+  public Uni<Void> fireAndForget(Message message) {
     try {
       String serviceName = service(message.metadata());
 
@@ -98,30 +98,30 @@ public final class RpcHandler implements MessageStreamsHandler {
         switch (size) {
           case 0:
             message.release();
-            return Single.error(new RpcException(NO_DEFAULT_ZERO_SERVICES_MESSAGE));
+            return Uni.createFrom().failure(new RpcException(NO_DEFAULT_ZERO_SERVICES_MESSAGE));
           case 1:
             return defaultService.fireAndForget(message);
           default:
             message.release();
-            return Single.error(new RpcException(NO_DEFAULT_MULTIPLE_SERVICES_MESSAGE));
+            return Uni.createFrom().failure(new RpcException(NO_DEFAULT_MULTIPLE_SERVICES_MESSAGE));
         }
       }
 
       RpcService rpcService = services.get(serviceName);
       if (rpcService == null) {
         message.release();
-        return Single.error(new RpcException(serviceName));
+        return Uni.createFrom().failure(new RpcException(serviceName));
       }
 
       return rpcService.fireAndForget(message);
     } catch (Throwable t) {
       ReferenceCountUtil.safeRelease(message);
-      return Single.error(t);
+      return Uni.createFrom().failure(t);
     }
   }
 
   @Override
-  public Single<Message> requestResponse(Message message) {
+  public Uni<Message> requestResponse(Message message) {
     try {
       String serviceName = service(message.metadata());
 
@@ -130,24 +130,24 @@ public final class RpcHandler implements MessageStreamsHandler {
         switch (size) {
           case 0:
             message.release();
-            return Single.error(new RpcException(NO_DEFAULT_ZERO_SERVICES_MESSAGE));
+            return Uni.createFrom().failure(new RpcException(NO_DEFAULT_ZERO_SERVICES_MESSAGE));
           case 1:
             return defaultService.requestResponse(message);
           default:
             message.release();
-            return Single.error(new RpcException(NO_DEFAULT_MULTIPLE_SERVICES_MESSAGE));
+            return Uni.createFrom().failure(new RpcException(NO_DEFAULT_MULTIPLE_SERVICES_MESSAGE));
         }
       }
 
       RpcService rpcService = services.get(serviceName);
       if (rpcService == null) {
         message.release();
-        return Single.error(new RpcException(serviceName));
+        return Uni.createFrom().failure(new RpcException(serviceName));
       }
       return rpcService.requestResponse(message);
     } catch (Throwable t) {
       ReferenceCountUtil.safeRelease(message);
-      return Single.error(t);
+      return Uni.createFrom().failure(t);
     }
   }
 
@@ -161,36 +161,38 @@ public final class RpcHandler implements MessageStreamsHandler {
         switch (size) {
           case 0:
             message.release();
-            return Multi.error(new RpcException(NO_DEFAULT_ZERO_SERVICES_MESSAGE));
+            return Multi.createFrom().failure(new RpcException(NO_DEFAULT_ZERO_SERVICES_MESSAGE));
           case 1:
             return defaultService.requestStream(message);
           default:
             message.release();
-            return Multi.error(new RpcException(NO_DEFAULT_MULTIPLE_SERVICES_MESSAGE));
+            return Multi.createFrom()
+                .failure(new RpcException(NO_DEFAULT_MULTIPLE_SERVICES_MESSAGE));
         }
       }
 
       RpcService rpcService = services.get(serviceName);
       if (rpcService == null) {
         message.release();
-        return Multi.error(new RpcException(serviceName));
+        return Multi.createFrom().failure(new RpcException(serviceName));
       }
 
       return rpcService.requestStream(message);
     } catch (Throwable t) {
       ReferenceCountUtil.safeRelease(message);
-      return Multi.error(t);
+      return Multi.createFrom().failure(t);
     }
   }
 
   @Override
-  public Multi<Message> requestChannel(Flow.Publisher<Message> messages) {
-    return Multi.error(
-        new RpcException("RpcHandler: unsupported method: requestChannel(Publisher<Payload>)"));
+  public Multi<Message> requestChannel(Publisher<Message> messages) {
+    return Multi.createFrom()
+        .failure(
+            new RpcException("RpcHandler: unsupported method: requestChannel(Publisher<Payload>)"));
   }
 
   @Override
-  public Multi<Message> requestChannel(Message message, Flow.Publisher<Message> messages) {
+  public Multi<Message> requestChannel(Message message, Publisher<Message> messages) {
     try {
       String serviceName = service(message.metadata());
 
@@ -199,25 +201,26 @@ public final class RpcHandler implements MessageStreamsHandler {
         switch (size) {
           case 0:
             message.release();
-            return Multi.error(new RpcException(NO_DEFAULT_ZERO_SERVICES_MESSAGE));
+            return Multi.createFrom().failure(new RpcException(NO_DEFAULT_ZERO_SERVICES_MESSAGE));
           case 1:
             return defaultService.requestChannel(message, messages);
           default:
             message.release();
-            return Multi.error(new RpcException(NO_DEFAULT_MULTIPLE_SERVICES_MESSAGE));
+            return Multi.createFrom()
+                .failure(new RpcException(NO_DEFAULT_MULTIPLE_SERVICES_MESSAGE));
         }
       }
 
       RpcService rpcService = services.get(serviceName);
       if (rpcService == null) {
         message.release();
-        return Multi.error(new RpcException(serviceName));
+        return Multi.createFrom().failure(new RpcException(serviceName));
       }
 
       return rpcService.requestChannel(message, messages);
     } catch (Throwable t) {
       ReferenceCountUtil.safeRelease(message);
-      return Multi.error(t);
+      return Multi.createFrom().failure(t);
     }
   }
 
@@ -225,7 +228,7 @@ public final class RpcHandler implements MessageStreamsHandler {
   public void dispose() {
     Map<String, RpcService> svcs = services;
     if (svcs.isEmpty()) {
-      onClose.complete(null);
+      onClose.complete(this);
       return;
     }
     svcs.forEach(
@@ -242,7 +245,7 @@ public final class RpcHandler implements MessageStreamsHandler {
             }
           }
         });
-    onClose.complete(null);
+    onClose.complete(this);
   }
 
   @Override
@@ -251,8 +254,8 @@ public final class RpcHandler implements MessageStreamsHandler {
   }
 
   @Override
-  public Single<Void> onClose() {
-    return Single.create(onClose, true);
+  public Uni<Void> onClose() {
+    return Uni.createFrom().completionStage(onClose).replaceWithVoid();
   }
 
   static String service(ByteBuf metadata) {
