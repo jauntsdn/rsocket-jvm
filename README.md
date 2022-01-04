@@ -21,10 +21,12 @@ RSocket-JVM includes RSocket-RPC: remote procedure call system on top of Protoco
 (netty-buffer only) streamline development process for each next vendor library.   
   
 **Shared transports**. Message byte transports are based on `rsocket-messages` and netty only 
-so usable by each vendor library. Currently transports are comprised of TCP, unix & websocket-over-http2, and 
-are considered part of RSocket-JVM runtime.
+so usable by each vendor library. 
 
-**Non-intrusive**. API ([MessageStreams](https://github.com/jauntsdn/rsocket-jvm/blob/1.1.0/rsocket-reactor/src/main/java/com/jauntsdn/rsocket/MessageStreams.java)) & runtime ([RSocket](https://github.com/jauntsdn/rsocket-jvm/blob/1.1.0/rsocket-reactor/src/main/java/com/jauntsdn/rsocket/RSocket.java)) are clearly split so from end-user perspective there is 
+Currently transports are comprised of TCP, unix, GRPC & websocket-over-http2, and are considered part 
+of RSocket-JVM runtime.
+
+**Non-intrusive**. API ([MessageStreams](https://github.com/jauntsdn/rsocket-jvm/blob/1.1.1/rsocket-reactor/src/main/java/com/jauntsdn/rsocket/MessageStreams.java)) & runtime ([RSocket](https://github.com/jauntsdn/rsocket-jvm/blob/1.1.0/rsocket-reactor/src/main/java/com/jauntsdn/rsocket/RSocket.java)) are clearly split so from end-user perspective there is 
 only defined set of basic interactions on buffers/messages:
 ```groovy
   Publisher<Message> requestResponse(Message message);
@@ -36,9 +38,10 @@ only defined set of basic interactions on buffers/messages:
 **GRPC compatible**. All implementations are directly compatible with GRPC via RSocket-RPC & GRPC transport.
 GRPC clients can access such services without separate "gateway" binaries and awkward IDL sharing schemes.
 
-### Project-reactor, rxjava, helidon
+### Project-reactor, rxjava, helidon, smallrye-mutiny
 
-RSocket-JVM is currently comprised of RSocket-rxjava (rxjava3), RSocket-reactor (project-reactor), and RSocket-helidon (helidon-commons-reactive).
+RSocket-JVM is currently comprised of RSocket-rxjava (rxjava3), RSocket-reactor (project-reactor), RSocket-helidon (helidon-commons-reactive)
+and smallrye-mutiny (mutiny).
 
 ### RSocket-RPC 
 
@@ -66,7 +69,7 @@ Building & installing artifacts into local maven repository
 
 ## Binaries
 
-Binary releases are published on Maven Central for reactor, rxjava & helidon libraries.
+Binary releases are published on Maven Central for reactor, rxjava, helidon & mutiny libraries.
 
 ```groovy
 
@@ -75,10 +78,10 @@ repositories {
 }
 
 dependencies {
-    implementation "com.jauntsdn.rsocket:rsocket-messages:1.1.0"
-    implementation "com.jauntsdn.rsocket:rsocket-rpc-idl:1.1.0"
-    implementation "com.jauntsdn.rsocket:rsocket-<VENDOR>:1.1.0"
-    implementation "com.jauntsdn.rsocket:rsocket-rpc-<VENDOR>:1.1.0"
+    implementation "com.jauntsdn.rsocket:rsocket-messages:1.1.1"
+    implementation "com.jauntsdn.rsocket:rsocket-rpc-idl:1.1.1"
+    implementation "com.jauntsdn.rsocket:rsocket-<VENDOR>:1.1.1"
+    implementation "com.jauntsdn.rsocket:rsocket-rpc-<VENDOR>:1.1.1"
 }
 ```
 
@@ -87,7 +90,7 @@ RSocket-RPC compiler binaries are for linux only
 protobuf {
      plugins {
           rsocketRpc {
-              artifact = "com.jauntsdn.rsocket:rsocket-rpc-<VENDOR>-compiler:1.1.0"
+              artifact = "com.jauntsdn.rsocket:rsocket-rpc-<VENDOR>-compiler:1.1.1"
           }
      }
 }
