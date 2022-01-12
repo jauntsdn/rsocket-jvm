@@ -31,7 +31,7 @@ so usable by each vendor library.
 Currently transports are comprised of `TCP, UNIX, GRPC & websocket-over-http2`, and are considered part 
 of (not yet publicly available) RSocket-JVM runtime.
 
-**Non-intrusive**. API ([MessageStreams](https://github.com/jauntsdn/rsocket-jvm/blob/1.1.1/rsocket-reactor/src/main/java/com/jauntsdn/rsocket/MessageStreams.java)) & runtime ([RSocket](https://github.com/jauntsdn/rsocket-jvm/blob/1.1.0/rsocket-reactor/src/main/java/com/jauntsdn/rsocket/RSocket.java)) are clearly split so from end-user perspective there is 
+**Non-intrusive**. API ([MessageStreams](https://github.com/jauntsdn/rsocket-jvm/blob/1.1.2/rsocket-reactor/src/main/java/com/jauntsdn/rsocket/MessageStreams.java)) & runtime ([RSocket](https://github.com/jauntsdn/rsocket-jvm/blob/1.1.2/rsocket-reactor/src/main/java/com/jauntsdn/rsocket/RSocket.java)) are clearly split so from end-user perspective there is 
 only defined set of basic interactions on buffers/messages:
 ```groovy
   Publisher<Message> requestResponse(Message message);
@@ -57,7 +57,7 @@ Each vendor library has RSocket-RPC API module accompanied by compiler binary.
 
 ## Build
 
-Building `jauntsdn/RSocket-jvm` requires java11 for helidon, and java8 for rxjava/reactor. 
+Building `jauntsdn/RSocket-jvm` requires java11 for helidon, and java8 for rxjava/reactor/mutiny. 
 ```
 ./gradlew
 ```
@@ -78,10 +78,10 @@ repositories {
 }
 
 dependencies {
-    implementation "com.jauntsdn.rsocket:rsocket-messages:1.1.1"
-    implementation "com.jauntsdn.rsocket:rsocket-rpc-idl:1.1.1"
-    implementation "com.jauntsdn.rsocket:rsocket-<VENDOR>:1.1.1"
-    implementation "com.jauntsdn.rsocket:rsocket-rpc-<VENDOR>:1.1.1"
+    implementation "com.jauntsdn.rsocket:rsocket-messages:1.1.2"
+    implementation "com.jauntsdn.rsocket:rsocket-rpc-idl:1.1.2"
+    implementation "com.jauntsdn.rsocket:rsocket-<VENDOR>:1.1.2"
+    implementation "com.jauntsdn.rsocket:rsocket-rpc-<VENDOR>:1.1.2"
 }
 ```
 
@@ -90,7 +90,7 @@ RSocket-RPC compiler binaries are for linux only
 protobuf {
      plugins {
           rsocketRpc {
-              artifact = "com.jauntsdn.rsocket:rsocket-rpc-<VENDOR>-compiler:1.1.1"
+              artifact = "com.jauntsdn.rsocket:rsocket-rpc-<VENDOR>-compiler:1.1.2"
           }
      }
 }
