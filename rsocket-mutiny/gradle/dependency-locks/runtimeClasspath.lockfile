@@ -1,8 +1,8 @@
 # This is a Gradle generated file for dependency locking.
 # Manual edits can break the build and are not advised.
 # This file is expected to be part of source control.
-io.netty:netty-buffer:4.1.72.Final
-io.netty:netty-common:4.1.72.Final
+io.netty:netty-buffer:4.1.73.Final
+io.netty:netty-common:4.1.73.Final
 io.smallrye.common:smallrye-common-annotation:1.8.0
 io.smallrye.reactive:mutiny:1.2.0
 org.reactivestreams:reactive-streams:1.0.3

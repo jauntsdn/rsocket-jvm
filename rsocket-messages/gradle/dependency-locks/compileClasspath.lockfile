@@ -2,5 +2,5 @@
 # Manual edits can break the build and are not advised.
 # This file is expected to be part of source control.
 com.google.code.findbugs:jsr305:3.0.2
-io.netty:netty-buffer:4.1.72.Final
-io.netty:netty-common:4.1.72.Final
+io.netty:netty-buffer:4.1.73.Final
+io.netty:netty-common:4.1.73.Final
