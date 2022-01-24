@@ -25,12 +25,6 @@ and smallrye-mutiny (mutiny).
 **Multiple vendor libraries**. [Shared protocol core](https://jauntsdn.com/post/rsocket-jvm/) with minimal dependencies 
 (netty-buffer only) streamline development process for each next vendor library.   
   
-**Shared transports**. Message byte transports are based on `rsocket-messages` and netty only 
-so usable by each vendor library. 
-
-Currently transports are comprised of `TCP, UNIX, GRPC & websocket-over-http2`, and are considered part 
-of (not yet publicly available) RSocket-JVM runtime.
-
 **Non-intrusive**. API ([MessageStreams](https://github.com/jauntsdn/rsocket-jvm/blob/1.1.3/rsocket-reactor/src/main/java/com/jauntsdn/rsocket/MessageStreams.java)) & runtime ([RSocket](https://github.com/jauntsdn/rsocket-jvm/blob/1.1.3/rsocket-reactor/src/main/java/com/jauntsdn/rsocket/RSocket.java)) are clearly split so from end-user perspective there is 
 only defined set of basic interactions on buffers/messages:
 ```groovy
@@ -42,6 +36,21 @@ only defined set of basic interactions on buffers/messages:
 
 **GRPC compatible**. All implementations are directly compatible with GRPC via RSocket-RPC & GRPC transport.
 GRPC clients can access such services without separate "gateway" binaries and awkward IDL sharing schemes.
+
+### Shared transports
+
+Message transports are based on `netty` only so usable by each vendor library, and are considered part 
+of (not yet publicly available) RSocket-JVM runtime.
+
+Currently they are comprised of 
+
+* `TCP` & `UNIX domain sockets` - known efficient byte stream protocols for datacenter / inter-process communication,
+
+and Http2 streams based transports for interop:
+
+* `GRPC-RSocket-RPC` for communication with internet clients / external services;
+
+* `Websocket-over-http2` for cross-cloud communication with Internet Standards transport.
 
 ### RSocket-RPC 
 
@@ -85,7 +94,7 @@ dependencies {
 }
 ```
 
-RSocket-RPC compiler binaries are for linux only
+RSocket-RPC compiler binaries are linux(x86) only
 ```groovy
 protobuf {
      plugins {
