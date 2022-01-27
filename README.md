@@ -94,7 +94,7 @@ dependencies {
 }
 ```
 
-RSocket-RPC compiler binaries are linux(x86) only
+RSocket-RPC compiler binaries are linux, windows(x86) only
 ```groovy
 protobuf {
      plugins {
@@ -104,6 +104,46 @@ protobuf {
      }
 }
 ```
+
+### Message streams. Design goals & scope
+
+**Fast transparent networking with practically useful set of reactive streams libraries, solely for JVM serverside applications**
+
+Currently rxjava3, projectreactor, smallrye-mutiny, helidon-reactive-streams.
+
+Languages and platforms other than JVM lack framework ecosystem (and most lack single reactive streams compatible library),
+so there are no substantial (except populist) reasons for commitment.   
+
+**Message Streams**
+
+Service APIs (Message Streams + RPC) and runtime (RSocket-JVM-runtime) are explicitly separated so latter may be extended
+without affecting end-user application services, and services may be compiled separately from runtime.
+
+**Codegen based RPC on top of Protocol Buffers, compatible with GRPC** 
+
+Protocol Buffers demonstrate acceptable performance with RSocket-JVM impls, provide framework to extend 
+its codegenerator for custom RPC system, plus Protobuf-java allows very efficient usage of netty memory buffers. 
+
+GRPC is dominant RPC based on Protocol Buffers over http2 for both server-side applications and mobile clients (except browsers) - 
+second only after http REST APIs. It is supported on each commercially viable language/os/arch, so direct compatibility 
+is essential for JVM-only Message Streams (RSocket-JVM) libraries.
+
+**Shared transports**
+
+Transports are shared, and considered part of runtime due to tight contract with RSocket-JVM for performance reasons. 
+This project offers strictly few highly optimized transports for interprocess/datacenter (TCP, UNIX sockets) 
+and cross-datacenter (GRPC-RSocketRPC, websocket-over-htp2) communication, instead of user-friendly APIs for
+external implementors. This way if supported transports are extended or replaced, transport contract
+is free to change to accomodate new needs.   
+
+**Performance**
+
+RSocket-JVM is optimized for small messages < 1KiB in size, typically 0.1 - 0.5 KiB: range covers common use cases
+from telemetry to social network chats. The goal is overwhelming throughput advantage 
+(Message Streams + RPC, per cpu) over GRPC-java for additional latency < 5 millis (typically ~1 ms) 
+with TCP transport, particularly request-response interaction ([comparison](https://jauntsdn.com/post/rsocket-vs-spring)). 
+Advantage < 2x would probably make project non-competitive against GRPC due to new network software stack and different programming
+model (as in case of RSocket/RSocket-java from "reactive foundation" which somehow is even slower than GRPC-java on streaming interactions).
 
 ## LICENSE
 
