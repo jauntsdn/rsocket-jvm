@@ -17,9 +17,9 @@ Reactive Streams implementations.
 
 RSocket-JVM includes RSocket-RPC: remote procedure call system on top of Protocol Buffers.
 
-### Project-reactor, rxjava, helidon, smallrye-mutiny
+### CompletableFuture, project-reactor, rxjava, helidon, smallrye-mutiny
 
-RSocket-JVM is currently comprised of RSocket-rxjava (rxjava3), RSocket-reactor (project-reactor), RSocket-helidon (helidon-commons-reactive)
+RSocket-JVM is currently comprised of RSocket-futures(CompletableFuture), RSocket-rxjava (rxjava3), RSocket-reactor (project-reactor), RSocket-helidon (helidon-commons-reactive)
 and smallrye-mutiny (mutiny).
 
 **Multiple vendor libraries**. [Shared protocol core](https://jauntsdn.com/post/rsocket-jvm/) with minimal dependencies 
@@ -78,7 +78,7 @@ Building & installing artifacts into local maven repository
 
 ## Binaries
 
-Binary releases are published on Maven Central for reactor, rxjava, helidon & mutiny libraries.
+Binary releases are published on Maven Central for java futures (CompletableFuture), reactor, rxjava, helidon & mutiny libraries.
 
 ```groovy
 

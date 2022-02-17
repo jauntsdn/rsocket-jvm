@@ -1,0 +1,17 @@
+/*
+ * Copyright 2020 - present Maksym Ostroverkhov.
+ */
+
+plugins {
+    id "java-library"
+    id "signing"
+    id "maven-publish"
+}
+
+dependencies {
+    api project(":rsocket-messages")
+
+    compileOnly "com.google.code.findbugs:jsr305"
+}
+
+description = "RSocket-futures api library"

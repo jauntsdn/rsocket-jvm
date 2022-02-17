@@ -17,6 +17,8 @@ include "rsocket-rxjava"
 include "rsocket-rpc-rxjava"
 include "rsocket-mutiny"
 include "rsocket-rpc-mutiny"
+include "rsocket-futures"
+include "rsocket-rpc-futures"
 include "rsocket-rpc-idl"
 
 if (!isJava8Release()) {
