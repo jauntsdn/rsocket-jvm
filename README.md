@@ -1,8 +1,22 @@
 ![Maven Central](https://img.shields.io/maven-central/v/com.jauntsdn.rsocket/rsocket-bom)
 
-# jauntsdn.com / RSocket-JVM
+# jauntsdn.com Message-Streams / RSocket-JVM
 
 ![RSocket-JVM implementations](readme/impls_stripe.png)
+
+## TL;DR
+
+>lean & very fast GRPC-like [services](https://github.com/jauntsdn/rsocket-jvm-interop-examples/tree/feature/oss/jaunt-rsocket-reactor-service/src/generated/main/rsocketRpc/trisocket) on JVM with rich streaming model;
+> 
+>multiple APIs: CompletableFuture; streaming with reactor, rxjava, mutiny, helidon;
+> 
+>pluggable networking: tcp, unix sockets, grpc, websockets-over-http2;
+> 
+>service APIs / codegen stubs (Message-Streams) are split from library runtime (including network transports, load estimators, metrics);
+> 
+>transparent origin (RPC) & proxy load estimation which enables cpu-efficient load balancers;
+> 
+>native image support with graalvm
 
 RSocket-JVM is [very fast](https://jauntsdn.com/post/rsocket-summary/) (millions of messages per core with each interaction) alternative to 
 projectreactor-only RSocket/RSocket-java from "Reactive Foundation" -
@@ -12,7 +26,7 @@ RSocket is low latency/high throughput L5 network protocol
 intended for high-performance services communication. It is transport agnostic, and runs on top 
 of any reliable byte stream transport.
 
-This repository hosts API part of RSocket-JVM - suite of libraries for fast interprocess/network communication using major
+This repository hosts Message-Streams - API part of RSocket-JVM, suite of libraries for fast interprocess/network communication using CompletableFutures & major
 Reactive Streams implementations.  
 
 RSocket-JVM includes RSocket-RPC: remote procedure call system on top of Protocol Buffers.
