@@ -148,7 +148,12 @@ Transports are shared, and considered part of runtime due to tight contract with
 This project offers strictly few highly optimized transports for interprocess/datacenter (TCP, UNIX sockets) 
 and cross-datacenter (GRPC-RSocketRPC, websocket-over-htp2) communication, instead of user-friendly APIs for
 external implementors. This way if supported transports are extended or replaced, transport contract
-is free to change to accomodate new needs.   
+is free to change to accommodate new needs.   
+
+**Targeting proxies**
+
+Important goal is performance loss minimization for proxy/intermediary case as there is no need to access/expose user data -
+only rewrite frame's header & non-user metadata in place.
 
 **Performance**
 
