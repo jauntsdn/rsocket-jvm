@@ -120,23 +120,27 @@ public abstract class SetupMessage implements ReferenceCounted {
     }
 
     @Override
-    public ReferenceCounted retain() {
-      return message.retain();
+    public SetupMessage retain() {
+      message.retain();
+      return this;
     }
 
     @Override
-    public ReferenceCounted retain(int increment) {
-      return message.retain(increment);
+    public SetupMessage retain(int increment) {
+      message.retain(increment);
+      return this;
     }
 
     @Override
-    public ReferenceCounted touch() {
-      return message.touch();
+    public SetupMessage touch() {
+      message.touch();
+      return this;
     }
 
     @Override
-    public ReferenceCounted touch(Object hint) {
-      return message.touch(hint);
+    public SetupMessage touch(Object hint) {
+      message.touch(hint);
+      return this;
     }
 
     @Override
