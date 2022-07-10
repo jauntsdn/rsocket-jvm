@@ -16,12 +16,18 @@
 
 package com.jauntsdn.rsocket;
 
+import java.util.Optional;
 import java.util.concurrent.CompletionStage;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.function.Function;
 
 public interface RSocket extends MessageStreams, Availability {
 
   CompletionStage<Void> metadataPush(Message message);
+
+  default Optional<ScheduledExecutorService> coarseScheduler() {
+    return Optional.empty();
+  }
 
   @Override
   default double availability(int rank) {
