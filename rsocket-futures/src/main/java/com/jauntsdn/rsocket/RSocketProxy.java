@@ -44,6 +44,15 @@ public class RSocketProxy implements RSocket {
   }
 
   @Override
+  public Optional<ScheduledExecutorService> coarseScheduler() {
+    MessageStreams s = source;
+    if (s instanceof RSocket) {
+      return ((RSocket) s).coarseScheduler();
+    }
+    return Optional.empty();
+  }
+
+  @Override
   public Optional<ByteBufAllocator> allocator() {
     return source.allocator();
   }
