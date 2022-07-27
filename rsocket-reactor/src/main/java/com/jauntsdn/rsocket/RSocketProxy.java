@@ -18,7 +18,6 @@ package com.jauntsdn.rsocket;
 
 import io.netty.buffer.ByteBufAllocator;
 import java.util.Optional;
-import java.util.concurrent.ScheduledExecutorService;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -66,7 +65,7 @@ public class RSocketProxy implements RSocket, RSocketHandler {
   }
 
   @Override
-  public Optional<ScheduledExecutorService> coarseScheduler() {
+  public Optional<Scheduler> coarseScheduler() {
     MessageStreams s = source;
     if (s instanceof RSocket) {
       return ((RSocket) s).coarseScheduler();

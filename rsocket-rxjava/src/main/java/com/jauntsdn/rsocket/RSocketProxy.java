@@ -22,7 +22,6 @@ import io.reactivex.rxjava3.core.Flowable;
 import io.reactivex.rxjava3.core.Scheduler;
 import io.reactivex.rxjava3.core.Single;
 import java.util.Optional;
-import java.util.concurrent.ScheduledExecutorService;
 import org.reactivestreams.Publisher;
 
 public class RSocketProxy implements RSocket, RSocketHandler {
@@ -72,7 +71,7 @@ public class RSocketProxy implements RSocket, RSocketHandler {
   }
 
   @Override
-  public Optional<ScheduledExecutorService> coarseScheduler() {
+  public Optional<Scheduler> coarseScheduler() {
     MessageStreams s = source;
     if (s instanceof RSocket) {
       return ((RSocket) s).coarseScheduler();
