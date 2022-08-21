@@ -17,11 +17,17 @@
 package com.jauntsdn.rsocket;
 
 import io.reactivex.rxjava3.core.Completable;
+import io.reactivex.rxjava3.core.Scheduler;
+import java.util.Optional;
 import java.util.function.Function;
 
 public interface RSocket extends MessageStreams, Availability {
 
   Completable metadataPush(Message message);
+
+  default Optional<Scheduler> coarseScheduler() {
+    return Optional.empty();
+  }
 
   @Override
   default double availability(int rank) {

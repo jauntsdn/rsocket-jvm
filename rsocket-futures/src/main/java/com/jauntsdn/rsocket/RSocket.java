@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 - present Maksym Ostroverkhov.
+ * Copyright 2020 - present Maksym Ostroverkhov.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,14 +16,14 @@
 
 package com.jauntsdn.rsocket;
 
-import io.helidon.common.reactive.Single;
 import java.util.Optional;
+import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.function.Function;
 
 public interface RSocket extends MessageStreams, Availability {
 
-  Single<Void> metadataPush(Message message);
+  CompletionStage<Void> metadataPush(Message message);
 
   default Optional<ScheduledExecutorService> coarseScheduler() {
     return Optional.empty();

@@ -1,0 +1,15 @@
+# This is a Gradle generated file for dependency locking.
+# Manual edits can break the build and are not advised.
+# This file is expected to be part of source control.
+com.google.code.findbugs:jsr305:3.0.2=compileClasspath,googleJavaFormat1.6
+com.google.errorprone:error_prone_annotations:2.0.18=googleJavaFormat1.6
+com.google.errorprone:javac-shaded:9+181-r4173-1=googleJavaFormat1.6
+com.google.googlejavaformat:google-java-format:1.6=googleJavaFormat1.6
+com.google.guava:guava:22.0=googleJavaFormat1.6
+com.google.j2objc:j2objc-annotations:1.1=googleJavaFormat1.6
+io.netty:netty-buffer:4.1.79.Final=compileClasspath,runtimeClasspath
+io.netty:netty-common:4.1.79.Final=compileClasspath,runtimeClasspath
+io.projectreactor:reactor-core:3.3.19.RELEASE=compileClasspath,runtimeClasspath
+org.codehaus.mojo:animal-sniffer-annotations:1.14=googleJavaFormat1.6
+org.reactivestreams:reactive-streams:1.0.3=compileClasspath,runtimeClasspath
+empty=annotationProcessor

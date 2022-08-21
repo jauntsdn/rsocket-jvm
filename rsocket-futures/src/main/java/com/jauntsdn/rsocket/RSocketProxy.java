@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 - present Maksym Ostroverkhov.
+ * Copyright 2020 - present Maksym Ostroverkhov.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,14 +16,12 @@
 
 package com.jauntsdn.rsocket;
 
-import io.helidon.common.reactive.Multi;
-import io.helidon.common.reactive.Single;
 import io.netty.buffer.ByteBufAllocator;
 import java.util.Optional;
-import java.util.concurrent.Flow;
+import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ScheduledExecutorService;
 
-public class RSocketProxy implements RSocket, RSocketHandler {
+public class RSocketProxy implements RSocket {
   protected final MessageStreams source;
 
   public RSocketProxy(MessageStreams source) {
@@ -31,37 +29,13 @@ public class RSocketProxy implements RSocket, RSocketHandler {
   }
 
   @Override
-  public Single<Void> fireAndForget(Message message) {
+  public CompletionStage<Void> fireAndForget(Message message) {
     return source.fireAndForget(message);
   }
 
   @Override
-  public Single<Message> requestResponse(Message message) {
+  public CompletionStage<Message> requestResponse(Message message) {
     return source.requestResponse(message);
-  }
-
-  @Override
-  public Multi<Message> requestStream(Message message) {
-    return source.requestStream(message);
-  }
-
-  @Override
-  public Multi<Message> requestChannel(Flow.Publisher<Message> messages) {
-    return source.requestChannel(messages);
-  }
-
-  @Override
-  public Multi<Message> requestChannel(Message message, Flow.Publisher<Message> messages) {
-    MessageStreams s = source;
-    if (s instanceof MessageStreamsHandler) {
-      return ((MessageStreamsHandler) s).requestChannel(message, messages);
-    }
-    return s.requestChannel(messages);
-  }
-
-  @Override
-  public Optional<Message.Factory> messageFactory() {
-    return source.messageFactory();
   }
 
   @Override
@@ -84,6 +58,11 @@ public class RSocketProxy implements RSocket, RSocketHandler {
   }
 
   @Override
+  public Optional<Message.Factory> messageFactory() {
+    return source.messageFactory();
+  }
+
+  @Override
   public void dispose() {
     source.dispose();
   }
@@ -99,7 +78,7 @@ public class RSocketProxy implements RSocket, RSocketHandler {
   }
 
   @Override
-  public Single<Void> onClose() {
+  public CompletionStage<Void> onClose() {
     return source.onClose();
   }
 
@@ -109,13 +88,13 @@ public class RSocketProxy implements RSocket, RSocketHandler {
   }
 
   @Override
-  public Single<Void> metadataPush(Message message) {
+  public CompletionStage<Void> metadataPush(Message message) {
     MessageStreams s = source;
     if (s instanceof RSocket) {
       return ((RSocket) s).metadataPush(message);
     }
     message.release();
-    return Single.error(
+    return AbstractRSocket.completedFuture(
         new UnsupportedOperationException(
             "metadata-push is not supported by source: " + s.getClass().getName()));
   }

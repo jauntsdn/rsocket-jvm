@@ -17,11 +17,17 @@
 package com.jauntsdn.rsocket;
 
 import io.smallrye.mutiny.Uni;
+import java.util.Optional;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.function.Function;
 
 public interface RSocket extends MessageStreams, Availability {
 
   Uni<Void> metadataPush(Message message);
+
+  default Optional<ScheduledExecutorService> coarseScheduler() {
+    return Optional.empty();
+  }
 
   @Override
   default double availability(int rank) {

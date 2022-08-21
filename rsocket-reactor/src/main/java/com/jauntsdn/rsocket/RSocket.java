@@ -16,12 +16,18 @@
 
 package com.jauntsdn.rsocket;
 
+import java.util.Optional;
 import java.util.function.Function;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Scheduler;
 
 public interface RSocket extends MessageStreams, Availability {
 
   Mono<Void> metadataPush(Message message);
+
+  default Optional<Scheduler> coarseScheduler() {
+    return Optional.empty();
+  }
 
   @Override
   default double availability(int rank) {
