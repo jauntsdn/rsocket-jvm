@@ -22,6 +22,7 @@ public interface Attributes {
   String RPC_CODEC = "rpc_codec";
   String RPC_INSTRUMENTATION = "rpc_instrumentation";
   String ALLOCATOR = "allocator";
+  String AVAILABILITY_STATS = "availability_stats";
 
   int intAttr(String key);
 

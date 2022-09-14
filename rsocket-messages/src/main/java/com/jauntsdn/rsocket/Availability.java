@@ -18,7 +18,11 @@ package com.jauntsdn.rsocket;
 
 public interface Availability {
 
+  double availability();
+
   double availability(int rank);
 
-  double availability();
+  default double availability(Interaction interaction) {
+    return availability(interaction.rank());
+  }
 }

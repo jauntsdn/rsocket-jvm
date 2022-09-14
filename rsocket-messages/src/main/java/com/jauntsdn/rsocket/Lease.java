@@ -20,19 +20,114 @@ import io.netty.buffer.ByteBuf;
 import io.netty.util.concurrent.Future;
 import java.util.Optional;
 import java.util.concurrent.ScheduledExecutorService;
+import javax.annotation.Nullable;
 
 /** Response stats recorder and request lease controller configuration. */
 public final class Lease {
 
   private Lease() {}
 
+  public static final class Metadata {
+    private final long[] serviceCallLatencies = new long[2];
+    private int allowedFnfRequests;
+
+    private Metadata() {}
+
+    public static Metadata create() {
+      return new Metadata();
+    }
+
+    public static int serviceCallMaxCount() {
+      return 2;
+    }
+
+    public Metadata allowedFnfRequests(int allowedFnfRequests) {
+      requirePositive(allowedFnfRequests, "allowedFnfRequests");
+      this.allowedFnfRequests = allowedFnfRequests;
+      return this;
+    }
+
+    /**
+     * @param serviceCall service call in "service/method" form
+     * @param latencyMicros service call p95 latency, micros
+     * @return this Metadata instance
+     */
+    public Metadata serviceCallLatency(String serviceCall, int latencyMicros) {
+      requireNotEmpty(serviceCall, "serviceCall");
+      requirePositive(latencyMicros, "latencyMicros");
+      for (int i = 0; i < serviceCallLatencies.length; i++) {
+        if (serviceCallLatencies[i] == 0) {
+          serviceCallLatencies[i] = encodeServiceCall(serviceCall, latencyMicros);
+          return this;
+        }
+      }
+      throw new IllegalStateException(
+          "No more than serviceCallMaxCount() = " + serviceCallMaxCount() + " are allowed");
+    }
+
+    Metadata serviceCallLatency(long serviceCallLatency) {
+      requirePositive(serviceCallLatency, "serviceCallLatency");
+      for (int i = 0; i < serviceCallLatencies.length; i++) {
+        if (serviceCallLatencies[i] == 0) {
+          serviceCallLatencies[i] = serviceCallLatency;
+          return this;
+        }
+      }
+      throw new IllegalStateException(
+          "No more than serviceCallMaxCount() = " + serviceCallMaxCount() + " are allowed");
+    }
+
+    long[] serviceCallLatencies() {
+      return serviceCallLatencies;
+    }
+
+    int serviceCallCount() {
+      long[] latencies = serviceCallLatencies;
+      return latencies[0] == 0 ? 0 : latencies[1] == 0 ? 1 : 2;
+    }
+
+    int allowedFnfRequests() {
+      return allowedFnfRequests;
+    }
+
+    static long encodeServiceCall(String serviceCall, int latency) {
+      return (long) serviceCall.hashCode() << 32 | latency;
+    }
+
+    static int decodeServiceCall(long serviceCallLatency) {
+      return (int) (serviceCallLatency >> 32);
+    }
+
+    static int decodeLatency(long serviceCallLatency) {
+      return (int) serviceCallLatency;
+    }
+
+    static String requireNotEmpty(@Nullable String string, String message) {
+      if (string == null || string.isEmpty()) {
+        throw new IllegalArgumentException(message + "must be non-empty");
+      }
+      return string;
+    }
+
+    static long requirePositive(long value, String message) {
+      if (value <= 0) {
+        throw new IllegalArgumentException(message + " must be positive");
+      }
+      return value;
+    }
+  }
+
   public interface Controller {
 
-    void allow(int timeToLiveMillis, int allowedRequests, int rank);
+    default void allow(int timeToLiveMillis, int allowedRequests, int rank) {
+      allow(timeToLiveMillis, allowedRequests, rank, null);
+    }
 
     default void allow(int timeToLiveMillis, int allowedRequests) {
       allow(timeToLiveMillis, allowedRequests, 0);
     }
+
+    void allow(int timeToLiveMillis, int allowedRequests, int rank, @Nullable Metadata metadata);
 
     ScheduledExecutorService executor();
 
