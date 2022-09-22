@@ -12,8 +12,6 @@ description = "RSocket-rpc-futures api library"
 
 dependencies {
     api project(":rsocket-futures")
-    api "javax.inject:javax.inject"
-    api "javax.annotation:javax.annotation-api"
 
     compileOnly "com.google.code.findbugs:jsr305"
 }

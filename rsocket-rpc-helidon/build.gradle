@@ -12,8 +12,6 @@ description = "RSocket-rpc-helidon api library"
 
 dependencies {
     api project(":rsocket-helidon")
-    api "javax.inject:javax.inject"
-    api "javax.annotation:javax.annotation-api"
 
     compileOnly "com.google.code.findbugs:jsr305"
 }
