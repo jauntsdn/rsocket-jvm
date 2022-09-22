@@ -19,4 +19,8 @@ package com.jauntsdn.rsocket;
 public interface GracefulCloseable {
 
   void dispose(String reason, boolean isGraceful);
+
+  default Attributes attributes() {
+    return Attributes.EMPTY;
+  }
 }
