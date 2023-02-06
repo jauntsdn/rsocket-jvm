@@ -21,6 +21,7 @@ dependencies {
     constraints {
         managedDependencyModules(parent).each { module -> api module }
 
+        api "io.grpc:grpc-stub:${grpcStubVersion}"
         api "io.reactivex.rxjava3:rxjava:${rxjavaVersion}"
         api "io.helidon.common:helidon-common-reactive:${helidonCommonReactiveVersion}"
         api "io.smallrye.reactive:mutiny:${mutinyVersion}"
