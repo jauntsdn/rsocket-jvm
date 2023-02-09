@@ -12,6 +12,7 @@ subprojects {
         }
 
         dependencies {
+            dependency "io.grpc:grpc-stub:${grpcStubVersion}"
             dependency "io.reactivex.rxjava3:rxjava:${rxjavaVersion}"
             dependency "io.helidon.common:helidon-common-reactive:${helidonCommonReactiveVersion}"
             dependency "io.smallrye.reactive:mutiny:${mutinyVersion}"
