@@ -20,6 +20,7 @@ include "rsocket-rpc-mutiny"
 include "rsocket-futures"
 include "rsocket-rpc-futures"
 include "rsocket-grpc"
+include "rsocket-rpc-grpc"
 include "rsocket-rpc-idl"
 
 if (!isJava8Release()) {
