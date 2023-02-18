@@ -16,6 +16,7 @@
 
 package com.jauntsdn.rsocket;
 
+import io.grpc.stub.ServerCallStreamObserver;
 import io.grpc.stub.StreamObserver;
 
 public interface MessageStreamsHandler extends MessageStreams {
@@ -23,5 +24,10 @@ public interface MessageStreamsHandler extends MessageStreams {
   default StreamObserver<Message> requestChannel(
       Message message, StreamObserver<Message> responseObserver) {
     return requestChannel(responseObserver);
+  }
+
+  @SuppressWarnings("unchecked")
+  static <T> ServerCallStreamObserver<T> noopServerObserver() {
+    return (ServerCallStreamObserver<T>) AbstractRSocket.NOOP_SERVER_OBSERVER;
   }
 }

@@ -196,7 +196,7 @@ public final class RpcHandler implements MessageStreamsHandler {
   public StreamObserver<Message> requestChannel(StreamObserver<Message> responseObserver) {
     responseObserver.onError(
         new RpcException("RpcHandler: unsupported method: requestChannel(Publisher<Payload>)"));
-    return AbstractRSocket.NOOP_OBSERVER;
+    return MessageStreamsHandler.noopServerObserver();
   }
 
   @Override
@@ -211,14 +211,13 @@ public final class RpcHandler implements MessageStreamsHandler {
           case 0:
             message.release();
             responseObserver.onError(new RpcException(NO_DEFAULT_ZERO_SERVICES_MESSAGE));
-            return AbstractRSocket.NOOP_OBSERVER;
+            return MessageStreamsHandler.noopServerObserver();
           case 1:
-            defaultService.requestStream(message, responseObserver);
-            return AbstractRSocket.NOOP_OBSERVER;
+            return defaultService.requestChannel(message, responseObserver);
           default:
             message.release();
             responseObserver.onError(new RpcException(NO_DEFAULT_MULTIPLE_SERVICES_MESSAGE));
-            return AbstractRSocket.NOOP_OBSERVER;
+            return MessageStreamsHandler.noopServerObserver();
         }
       }
 
@@ -226,13 +225,13 @@ public final class RpcHandler implements MessageStreamsHandler {
       if (rpcService == null) {
         message.release();
         responseObserver.onError(new RpcException(serviceName));
-        return AbstractRSocket.NOOP_OBSERVER;
+        return MessageStreamsHandler.noopServerObserver();
       }
       return rpcService.requestChannel(message, responseObserver);
     } catch (Throwable t) {
       ReferenceCountUtil.safeRelease(message);
       responseObserver.onError(t);
-      return AbstractRSocket.NOOP_OBSERVER;
+      return MessageStreamsHandler.noopServerObserver();
     }
   }
 

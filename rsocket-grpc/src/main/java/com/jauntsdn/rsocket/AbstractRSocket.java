@@ -16,9 +16,14 @@
 
 package com.jauntsdn.rsocket;
 
+import io.grpc.stub.ClientCallStreamObserver;
+import io.grpc.stub.ServerCallStreamObserver;
 import io.grpc.stub.StreamObserver;
+import io.netty.util.ReferenceCounted;
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
+import javax.annotation.Nullable;
 
 public abstract class AbstractRSocket implements RSocket {
 
@@ -49,7 +54,7 @@ public abstract class AbstractRSocket implements RSocket {
   @Override
   public StreamObserver<Message> requestChannel(StreamObserver<Message> responseObserver) {
     responseObserver.onError(new UnsupportedOperationException("request-channel not implemented"));
-    return NOOP_OBSERVER;
+    return MessageStreamsHandler.noopServerObserver();
   }
 
   @Override
@@ -65,11 +70,90 @@ public abstract class AbstractRSocket implements RSocket {
     return new CompletableFuture<>();
   }
 
-  static final StreamObserver<Message> NOOP_OBSERVER =
-      new StreamObserver<Message>() {
+  static final ClientCallStreamObserver<?> NOOP_CLIENT_OBSERVER =
+      new ClientCallStreamObserver<Object>() {
         @Override
-        public void onNext(Message message) {
-          message.release();
+        public void cancel(@Nullable String message, @Nullable Throwable cause) {}
+
+        @Override
+        public boolean isReady() {
+          return false;
+        }
+
+        @Override
+        public void setOnReadyHandler(Runnable onReadyHandler) {}
+
+        @Override
+        public void disableAutoInboundFlowControl() {}
+
+        @Override
+        public void disableAutoRequestWithInitial(int request) {}
+
+        @Override
+        public void request(int count) {}
+
+        @Override
+        public void setMessageCompression(boolean enable) {}
+
+        @Override
+        public void onNext(Object value) {
+          if (value instanceof ReferenceCounted) {
+            ((ReferenceCounted) value).release();
+          }
+        }
+
+        @Override
+        public void onError(Throwable t) {}
+
+        @Override
+        public void onCompleted() {}
+      };
+
+  static final ServerCallStreamObserver<?> NOOP_SERVER_OBSERVER =
+      new ServerCallStreamObserver<Object>() {
+        @Override
+        public boolean isCancelled() {
+          return false;
+        }
+
+        @Override
+        public void setOnCancelHandler(Runnable onCancelHandler) {}
+
+        @Override
+        public void setCompression(String compression) {}
+
+        @Override
+        public boolean isReady() {
+          return false;
+        }
+
+        @Override
+        public void setOnReadyHandler(Runnable onReadyHandler) {}
+
+        @Override
+        public void request(int count) {}
+
+        @Override
+        public void setMessageCompression(boolean enable) {}
+
+        @Override
+        public void disableAutoInboundFlowControl() {}
+
+        @Override
+        public void disableAutoRequest() {
+          super.disableAutoRequest();
+        }
+
+        @Override
+        public void setOnCloseHandler(Runnable onCloseHandler) {
+          Objects.requireNonNull(onCloseHandler, "onCloseHandler").run();
+        }
+
+        @Override
+        public void onNext(Object value) {
+          if (value instanceof ReferenceCounted) {
+            ((ReferenceCounted) value).release();
+          }
         }
 
         @Override

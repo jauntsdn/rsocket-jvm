@@ -16,6 +16,7 @@
 
 package com.jauntsdn.rsocket;
 
+import io.grpc.stub.ClientCallStreamObserver;
 import io.grpc.stub.StreamObserver;
 import io.netty.buffer.ByteBufAllocator;
 import java.util.Optional;
@@ -41,5 +42,10 @@ public interface MessageStreams extends Closeable {
 
   default Optional<ByteBufAllocator> allocator() {
     return Optional.empty();
+  }
+
+  @SuppressWarnings("unchecked")
+  static <T> ClientCallStreamObserver<T> noopClientObserver() {
+    return (ClientCallStreamObserver<T>) AbstractRSocket.NOOP_CLIENT_OBSERVER;
   }
 }
