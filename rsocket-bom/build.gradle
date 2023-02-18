@@ -31,11 +31,12 @@ dependencies {
         api "jakarta.inject:jakarta.inject-api:${jakartaInjectVersion}"
         api "jakarta.annotation:jakarta.annotation-api:${jakartaAnnotationVersion}"
 
+        api "com.jauntsdn.rsocket:rsocket-rpc-grpc-compiler:${version}"
+        api "com.jauntsdn.rsocket:rsocket-rpc-futures-compiler:${version}"
+        api "com.jauntsdn.rsocket:rsocket-rpc-mutiny-compiler:${version}"
         api "com.jauntsdn.rsocket:rsocket-rpc-reactor-compiler:${version}"
         api "com.jauntsdn.rsocket:rsocket-rpc-rxjava-compiler:${version}"
         api "com.jauntsdn.rsocket:rsocket-rpc-helidon-compiler:${version}"
-        api "com.jauntsdn.rsocket:rsocket-rpc-mutiny-compiler:${version}"
-        api "com.jauntsdn.rsocket:rsocket-rpc-futures-compiler:${version}"
         api "com.google.protobuf:protoc:${protobufVersion}"
     }
 }
