@@ -16,12 +16,10 @@
 
 package com.jauntsdn.rsocket;
 
-import java.util.function.BiConsumer;
-
 public interface RpcInstrumentation {
 
   <T> RpcInstrumentation.Factory<T> instrument(
-      String role, String service, String method, boolean hasResponse);
+      String role, String service, String method, boolean isStream);
 
   interface Factory<T> {
 
@@ -32,6 +30,12 @@ public interface RpcInstrumentation {
 
     void onStart();
 
-    BiConsumer<? super T, ? super Throwable> onComplete();
+    void onNext(T message);
+
+    void onComplete();
+
+    void onError(Throwable t);
+
+    void onCancel();
   }
 }
