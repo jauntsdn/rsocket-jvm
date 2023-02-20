@@ -1,0 +1,17 @@
+/*
+ * Copyright 2020 - present Maksym Ostroverkhov.
+ */
+
+plugins {
+    id "java-library"
+    id "signing"
+    id "maven-publish"
+}
+
+description = "RSocket-rpc-grpc api library"
+
+dependencies {
+    api project(":rsocket-grpc")
+
+    compileOnly "com.google.code.findbugs:jsr305"
+}

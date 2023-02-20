@@ -1,0 +1,18 @@
+/*
+ * Copyright 2023 - present Maksym Ostroverkhov.
+ */
+
+plugins {
+    id "java-library"
+    id "signing"
+    id "maven-publish"
+}
+
+dependencies {
+    api project(":rsocket-messages")
+    api "io.grpc:grpc-stub"
+
+    compileOnly "com.google.code.findbugs:jsr305"
+}
+
+description = "RSocket-grpc-stub (StreamObserver) API"
