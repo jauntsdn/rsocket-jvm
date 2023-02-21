@@ -11,11 +11,11 @@
 
 >lean & very fast GRPC-like [services](https://github.com/jauntsdn/rsocket-jvm-interop-examples/tree/feature/oss/jaunt-rsocket-reactor-service/src/generated/main/rsocketRpc/trisocket) on JVM with rich streaming model;
 > 
->multiple APIs: CompletableFuture; streaming with reactor, rxjava, mutiny, helidon;
+>multiple APIs: CompletableFuture; streaming with GRPC-API (StreamObserver), flavor of reactive: smallrye-mutiny, rxjava, reactor;
 > 
->pluggable networking: tcp, unix sockets, grpc, websockets-over-http2;
+>pluggable networking: TCP, unix sockets, GRPC, websockets, websockets-over-http2;
 > 
->service APIs / codegen stubs (Message-Streams) are split from library runtime (including network transports, load estimators, metrics);
+>service APIs / codegen stubs (Message-Streams) are split from library runtime (RSocket-JVM, including network transports, load estimators, metrics);
 > 
 >transparent origin (RPC) & proxy load estimation which enables cpu-efficient load balancers;
 > 
@@ -29,21 +29,29 @@ RSocket is low latency/high throughput L5 network protocol
 intended for high-performance services communication. It is transport agnostic, and runs on top 
 of any reliable byte stream transport.
 
-This repository hosts Message-Streams - API part of RSocket-JVM, suite of libraries for fast interprocess/network communication using CompletableFutures & major
+This repository hosts Message-Streams - API part of RSocket-JVM, suite of libraries for fast interprocess/network communication using GRPC API, CompletableFutures & major
 Reactive Streams implementations.  
 
 RSocket-JVM includes RSocket-RPC: remote procedure call system on top of Protocol Buffers.
 
-### CompletableFuture, project-reactor, rxjava, helidon, smallrye-mutiny
+### CompletableFuture, GRPC-api (StreamObserver), smallrye-mutiny, rxjava, project-reactor
 
-RSocket-JVM is currently comprised of RSocket-futures(CompletableFuture), RSocket-rxjava (rxjava3), RSocket-reactor (project-reactor), RSocket-helidon (helidon-commons-reactive)
-and smallrye-mutiny (mutiny).
+RSocket-JVM is currently comprised of RSocket-futures(CompletableFuture), RSocket-GRPC (GRPC-stubs StreamObserver), RSocket-mutiny (smallrye-mutiny), 
+RSocket-rxjava (rxjava3), and RSocket-reactor (project-reactor).
 
 **Multiple vendor libraries**. [Shared protocol core](https://jauntsdn.com/post/rsocket-jvm/) with minimal dependencies 
 (netty-buffer only) streamline development process for each next vendor library.   
   
-**Non-intrusive**. API ([MessageStreams](https://github.com/jauntsdn/rsocket-jvm/blob/1.3.0/rsocket-reactor/src/main/java/com/jauntsdn/rsocket/MessageStreams.java)) & runtime ([RSocket](https://github.com/jauntsdn/rsocket-jvm/blob/1.3.0/rsocket-reactor/src/main/java/com/jauntsdn/rsocket/RSocket.java)) are clearly split so from end-user perspective there is 
+**Non-intrusive**. API ([MessageStreams](https://github.com/jauntsdn/rsocket-jvm/blob/1.3.0/rsocket-reactor/src/main/java/com/jauntsdn/rsocket/MessageStreams.java)) & runtime ([RSocket-JVM](https://github.com/jauntsdn/rsocket-jvm/blob/1.3.0/rsocket-reactor/src/main/java/com/jauntsdn/rsocket/RSocket.java)) are clearly split so from end-user perspective there is 
 only defined set of basic interactions on buffers/messages:
+
+```groovy
+  void requestResponse(Message message, StreamObserver<Message> responseObserver);
+  void requestStream(Message message, StreamObserver<Message> responseObserver);
+  StreamObserver<Message> requestChannel(StreamObserver<Message> responseObserver);
+  void fireAndForget(Message message, StreamObserver<Message> responseObserver);
+```
+
 ```groovy
   Publisher<Message> requestResponse(Message message);
   Publisher<Message> requestStream(Message message);
@@ -52,7 +60,7 @@ only defined set of basic interactions on buffers/messages:
 ```
 
 **GRPC compatible**. All implementations are directly compatible with GRPC via RSocket-RPC & GRPC transport.
-GRPC clients can access such services without separate "gateway" binaries and awkward IDL sharing schemes.
+GRPC clients can access such services without separate "gateway" binaries and IDL sharing schemes.
 
 ### Shared transports
 
@@ -67,7 +75,7 @@ and Http2 streams based transports for interop:
 
 * `GRPC-RSocket-RPC` for communication with internet clients / external services;
 
-* `Websocket-over-http2` for cross-cloud communication with Internet Standards transport.
+* `WebSocket` & `Websocket-over-http2` for cross-cloud communication with Internet Standards transport.
 
 ### RSocket-RPC 
 
@@ -124,9 +132,9 @@ protobuf {
 
 ### Message streams. Design goals & scope
 
-**Fast transparent networking with practically useful set of reactive streams libraries, solely for JVM serverside applications**
+**Fast transparent networking with practically useful set of streams libraries, solely for JVM serverside applications**
 
-Currently rxjava3, projectreactor, smallrye-mutiny, helidon-reactive-streams.
+Currently CompletableFuture, GRPC-stubs (StreamObserver), smallrye-mutiny, rxjava3, projectreactor.
 
 Languages and platforms other than JVM lack framework ecosystem (and most lack single reactive streams compatible library),
 so there are no substantial (except populist) reasons for commitment.   
@@ -149,7 +157,7 @@ is essential for JVM-only Message Streams (RSocket-JVM) libraries.
 
 Transports are shared, and considered part of runtime due to tight contract with RSocket-JVM for performance reasons. 
 This project offers strictly few highly optimized transports for interprocess/datacenter (TCP, UNIX sockets) 
-and cross-datacenter (GRPC-RSocketRPC, websocket-over-htp2) communication, instead of user-friendly APIs for
+and cross-datacenter (GRPC-RSocketRPC, websocket, websocket-over-htp2) communication, instead of user-friendly APIs for
 external implementors. This way if supported transports are extended or replaced, transport contract
 is free to change to accommodate new needs.   
 
