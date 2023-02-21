@@ -7,7 +7,7 @@
 
 ![RSocket-JVM implementations](readme/impls_stripe.png)
 
-Message-Streams is very fast GRPC-like & GRPC-compatible services on JVM with rich streaming models [1](https://jauntsdn.com/mstreams/).
+Message-Streams is very fast GRPC-like & GRPC-compatible services on JVM with rich streaming models [[1]](https://jauntsdn.com/mstreams/).
 
 ## TL;DR
 
