@@ -104,7 +104,11 @@ public final class RpcMessageCodec {
             public void request(int count) {}
 
             @Override
-            public void setMessageCompression(boolean enable) {}
+            public void setMessageCompression(boolean enable) {
+              if (enable) {
+                throw new UnsupportedOperationException("GRPC compression not supported");
+              }
+            }
 
             @Override
             public void disableAutoInboundFlowControl() {}
@@ -348,6 +352,11 @@ public final class RpcMessageCodec {
                     }
 
                     @Override
+                    public void disableAutoRequestWithInitial(int request) {
+                      requestStream.disableAutoRequestWithInitial(request);
+                    }
+
+                    @Override
                     public void onNext(ReqT value) {
                       /*protobuf is not refcounted - ignore*/
                     }
@@ -384,6 +393,11 @@ public final class RpcMessageCodec {
     }
 
     @Override
+    public void setOnCloseHandler(Runnable onCloseHandler) {
+      upstream.setOnCloseHandler(onCloseHandler);
+    }
+
+    @Override
     public void setOnCancelHandler(Runnable onCancelHandler) {
       upstream.setOnCancelHandler(onCancelHandler);
     }
@@ -406,6 +420,11 @@ public final class RpcMessageCodec {
     @Override
     public final void disableAutoInboundFlowControl() {
       upstream.disableAutoInboundFlowControl();
+    }
+
+    @Override
+    public void disableAutoRequest() {
+      upstream.disableAutoRequest();
     }
 
     @Override
