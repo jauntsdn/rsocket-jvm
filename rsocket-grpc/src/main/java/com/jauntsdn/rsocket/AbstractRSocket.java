@@ -25,7 +25,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import javax.annotation.Nullable;
 
-public abstract class AbstractRSocket implements RSocket {
+public abstract class AbstractRSocket implements RSocketHandler {
 
   @Override
   public void metadataPush(Message message, StreamObserver<Message> responseObserver) {
@@ -53,6 +53,14 @@ public abstract class AbstractRSocket implements RSocket {
 
   @Override
   public StreamObserver<Message> requestChannel(StreamObserver<Message> responseObserver) {
+    responseObserver.onError(new UnsupportedOperationException("request-channel not implemented"));
+    return MessageStreamsHandler.noopServerObserver();
+  }
+
+  @Override
+  public StreamObserver<Message> requestChannel(
+      Message message, StreamObserver<Message> responseObserver) {
+    message.release();
     responseObserver.onError(new UnsupportedOperationException("request-channel not implemented"));
     return MessageStreamsHandler.noopServerObserver();
   }
