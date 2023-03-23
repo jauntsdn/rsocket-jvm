@@ -104,7 +104,11 @@ public final class RpcMessageCodec {
             public void request(int count) {}
 
             @Override
-            public void setMessageCompression(boolean enable) {}
+            public void setMessageCompression(boolean enable) {
+              if (enable) {
+                throw new UnsupportedOperationException("GRPC compression not supported");
+              }
+            }
 
             @Override
             public void disableAutoInboundFlowControl() {}
@@ -348,6 +352,11 @@ public final class RpcMessageCodec {
                     }
 
                     @Override
+                    public void disableAutoRequestWithInitial(int request) {
+                      requestStream.disableAutoRequestWithInitial(request);
+                    }
+
+                    @Override
                     public void onNext(ReqT value) {
                       /*protobuf is not refcounted - ignore*/
                     }
@@ -367,6 +376,171 @@ public final class RpcMessageCodec {
     }
   }
 
+  public static final class Channel {
+    private Channel() {}
+
+    public static final class Client {
+      private Client() {}
+
+      public static <ReqT, RespT> StreamObserver<Message> decode(
+          StreamObserver<RespT> observer,
+          Encoder<ReqT> encoder,
+          Function<Message, RespT> decoder,
+          @Nullable RpcInstrumentation.Listener<RespT> instrumentationListener) {
+        if (observer instanceof ClientResponseObserver) {
+          return new RequestChannelEncoderObserver<>(
+              (ClientResponseObserver<ReqT, RespT>) observer,
+              encoder,
+              decoder,
+              instrumentationListener);
+        }
+        return new RequestChannelObserver<>(observer, decoder, instrumentationListener);
+      }
+
+      static class RequestChannelObserver<RespT> implements StreamObserver<Message> {
+        final StreamObserver<RespT> observer;
+        final Function<Message, RespT> decoder;
+        final RpcInstrumentation.Listener<RespT> instrumentationListener;
+
+        RequestChannelObserver(
+            StreamObserver<RespT> observer,
+            Function<Message, RespT> decoder,
+            @Nullable RpcInstrumentation.Listener<RespT> instrumentationListener) {
+          this.observer = observer;
+          this.decoder = decoder;
+          this.instrumentationListener = instrumentationListener;
+          if (instrumentationListener != null) {
+            instrumentationListener.onStart();
+          }
+        }
+
+        @Override
+        public void onNext(Message message) {
+          RespT t = decoder.apply(message);
+          observer.onNext(t);
+          RpcInstrumentation.Listener<RespT> l = instrumentationListener;
+          if (l != null) {
+            l.onNext(t);
+          }
+        }
+
+        @Override
+        public void onError(Throwable t) {
+          observer.onError(t);
+          RpcInstrumentation.Listener<RespT> l = instrumentationListener;
+          if (l != null) {
+            l.onError(t);
+          }
+        }
+
+        @Override
+        public void onCompleted() {
+          observer.onCompleted();
+          RpcInstrumentation.Listener<RespT> l = instrumentationListener;
+          if (l != null) {
+            l.onComplete();
+          }
+        }
+      }
+
+      static final class RequestChannelEncoderObserver<ReqT, RespT>
+          extends RequestChannelObserver<RespT>
+          implements ClientResponseObserver<Message, Message> {
+        final Encoder<ReqT> encoder;
+
+        RequestChannelEncoderObserver(
+            ClientResponseObserver<ReqT, RespT> observer,
+            Encoder<ReqT> encoder,
+            Function<Message, RespT> decoder,
+            @Nullable RpcInstrumentation.Listener<RespT> instrumentationListener) {
+          super(observer, decoder, instrumentationListener);
+          this.encoder = encoder;
+        }
+
+        @Override
+        public void beforeStart(ClientCallStreamObserver<Message> requestStream) {
+          ((ClientResponseObserver<ReqT, RespT>) observer)
+              .beforeStart(encoder.encodeStream(requestStream));
+        }
+      }
+
+      public abstract static class Encoder<ReqT> {
+        final RpcInstrumentation.Listener<?> instrumentationListener;
+
+        public Encoder(@Nullable RpcInstrumentation.Listener<?> instrumentationListener) {
+          this.instrumentationListener = instrumentationListener;
+        }
+
+        public abstract Message onNext(ReqT message);
+
+        public ClientCallStreamObserver<ReqT> encodeStream(StreamObserver<Message> observer) {
+          if (!(observer instanceof ClientCallStreamObserver)) {
+            throw new IllegalStateException(
+                "messageStream.requestChannel() returned value is not ClientCallStreamObserver");
+          }
+          ClientCallStreamObserver<Message> callObserver =
+              (ClientCallStreamObserver<Message>) observer;
+          return new ClientCallStreamObserver<ReqT>() {
+
+            @Override
+            public void cancel(@Nullable String message, @Nullable Throwable cause) {
+              RpcInstrumentation.Listener<?> listener = instrumentationListener;
+              if (listener != null) {
+                listener.onCancel();
+              }
+              callObserver.cancel(message, cause);
+            }
+
+            @Override
+            public boolean isReady() {
+              return callObserver.isReady();
+            }
+
+            @Override
+            public void setOnReadyHandler(Runnable onReadyHandler) {
+              callObserver.setOnReadyHandler(onReadyHandler);
+            }
+
+            @Override
+            public void disableAutoInboundFlowControl() {
+              callObserver.disableAutoInboundFlowControl();
+            }
+
+            @Override
+            public void disableAutoRequestWithInitial(int request) {
+              callObserver.disableAutoRequestWithInitial(request);
+            }
+
+            @Override
+            public void request(int count) {
+              callObserver.request(count);
+            }
+
+            @Override
+            public void setMessageCompression(boolean enable) {
+              callObserver.setMessageCompression(enable);
+            }
+
+            @Override
+            public void onNext(ReqT value) {
+              callObserver.onNext(Encoder.this.onNext(value));
+            }
+
+            @Override
+            public void onError(Throwable t) {
+              callObserver.onError(t);
+            }
+
+            @Override
+            public void onCompleted() {
+              callObserver.onCompleted();
+            }
+          };
+        }
+      }
+    }
+  }
+
   abstract static class AbstractServerEncode<RespT> extends ServerCallStreamObserver<RespT> {
     final ServerCallStreamObserver<Message> upstream;
     final RpcInstrumentation.Listener<Message> instrumentationListener;
@@ -381,6 +555,11 @@ public final class RpcMessageCodec {
     @Override
     public final boolean isCancelled() {
       return upstream.isCancelled();
+    }
+
+    @Override
+    public void setOnCloseHandler(Runnable onCloseHandler) {
+      upstream.setOnCloseHandler(onCloseHandler);
     }
 
     @Override
@@ -406,6 +585,11 @@ public final class RpcMessageCodec {
     @Override
     public final void disableAutoInboundFlowControl() {
       upstream.disableAutoInboundFlowControl();
+    }
+
+    @Override
+    public void disableAutoRequest() {
+      upstream.disableAutoRequest();
     }
 
     @Override

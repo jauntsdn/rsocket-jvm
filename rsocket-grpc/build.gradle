@@ -10,7 +10,10 @@ plugins {
 
 dependencies {
     api project(":rsocket-messages")
-    api "io.grpc:grpc-stub"
+    api ("io.grpc:grpc-stub") {
+        exclude group: "com.google.guava", module: "guava"
+        exclude group: "com.google.errorprone", module: "error_prone_annotations"
+    }
 
     compileOnly "com.google.code.findbugs:jsr305"
 }
