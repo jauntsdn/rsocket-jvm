@@ -279,7 +279,7 @@ public final class RpcHandler implements MessageStreamsHandler {
         RpcService.Factory<?> factory = factories[i];
         MessageStreamsHandler handler = factory.withLifecycle(requester);
         if (handler instanceof RpcService) {
-          services[i++] = (RpcService) handler;
+          services[i] = (RpcService) handler;
         } else {
           throw new IllegalArgumentException(
               "RpcService.Factory "
