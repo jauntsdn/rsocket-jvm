@@ -34,6 +34,7 @@ dependencies {
 
         api "com.jauntsdn.rsocket:rsocket-rpc-grpc-compiler:${version}"
         api "com.jauntsdn.rsocket:rsocket-rpc-futures-compiler:${version}"
+        api "com.jauntsdn.rsocket:rsocket-rpc-virtualthreads-compiler:${version}"
         api "com.jauntsdn.rsocket:rsocket-rpc-mutiny-compiler:${version}"
         api "com.jauntsdn.rsocket:rsocket-rpc-reactor-compiler:${version}"
         api "com.jauntsdn.rsocket:rsocket-rpc-rxjava-compiler:${version}"

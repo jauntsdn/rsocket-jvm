@@ -23,6 +23,10 @@ include "rsocket-grpc"
 include "rsocket-rpc-grpc"
 include "rsocket-rpc-idl"
 
+if (includeVirtualThreads()) {
+    include "rsocket-rpc-virtualthreads"
+}
+
 if (!isJava8Release()) {
     include "rsocket-bom"
     include "rsocket-helidon"
@@ -31,4 +35,13 @@ if (!isJava8Release()) {
 
 boolean isJava8Release() {
     return properties.get("release") == "true" && properties.get("target") == "java8"
+}
+
+boolean includeVirtualThreads() {
+    if (!properties.containsKey("virtualthreads")) {
+        return false
+    }
+
+    def virtualthreads = properties.get("virtualthreads")
+    return virtualthreads == null || virtualthreads.isEmpty() || virtualthreads == "true"
 }
