@@ -126,6 +126,9 @@ def projectVersion(project) {
 }
 
 def useToolchains() {
+    if (properties.get("release") == "true") {
+        return true
+    }
     if (!project.hasProperty("toolchains")) {
         return false
     }
