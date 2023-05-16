@@ -11,7 +11,7 @@ Very fast GRPC-like & GRPC-compatible services on JVM with rich streaming models
 
 ## Summary
 
->multiple APIs: CompletableFuture; traditional streaming with GRPC-API (StreamObserver), or flavor of reactive: smallrye-mutiny, rxjava, reactor;
+>multiple APIs: CompletableFuture or virtual threads; traditional streaming with GRPC-API (StreamObserver), or flavor of reactive: smallrye-mutiny, rxjava, reactor;
 > 
 >pluggable networking: TCP, unix sockets, GRPC, websockets, websockets-over-http2;
 > 
@@ -33,13 +33,13 @@ multiple transports using multiple APIs.
 RSocket is low latency/high throughput L5 network protocol intended for high-performance services communication. 
 It is transport agnostic, and runs on top of any reliable byte stream transport.
 
-### CompletableFuture; GRPC StreamObserver; smallrye-mutiny, rxjava, project-reactor
+### CompletableFuture; virtual threads; GRPC StreamObserver; smallrye-mutiny, rxjava, project-reactor
 
 **Multiple vendor libraries**. [Shared protocol core](https://jauntsdn.com/post/rsocket-jvm/) with minimal dependencies 
 (`netty-buffer` only) streamlined development process for each vendor library & reduced maintenance cost of multiple libraries to feasible level.
 
 Project supports 3 kinds of APIs: 
-* request-response with RSocket-futures (JDK only CompletableFuture); 
+* request-response with RSocket-futures (JDK CompletableFuture) or virtual threads; 
 * traditional streaming with RSocket-GRPC (GRPC-stubs StreamObserver); 
 * flavors of reactive with RSocket-mutiny (smallrye-mutiny), RSocket-rxjava (rxjava3), and RSocket-reactor (project-reactor).
 
@@ -134,11 +134,13 @@ protobuf {
 }
 ```
 
+For `virtualthreads` APIs binaries are available for RPC only.
+
 ### Message streams. Design goals & scope
 
 **Fast transparent networking with practically useful set of streams libraries, solely for JVM serverside applications**
 
-Currently CompletableFuture, GRPC-stubs (StreamObserver), smallrye-mutiny, rxjava3, projectreactor.
+Currently CompletableFutures (plus virtual threads), GRPC-stubs (StreamObserver), smallrye-mutiny, rxjava3, projectreactor.
 
 Languages and platforms other than JVM lack framework ecosystem (and most lack single reactive streams compatible library),
 so there are no substantial (except populist) reasons for commitment.   
