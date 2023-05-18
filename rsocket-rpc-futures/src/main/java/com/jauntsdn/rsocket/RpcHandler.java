@@ -220,7 +220,7 @@ public final class RpcHandler implements MessageStreams {
     }
   }
 
-  static <T> CompletableFuture<T> completedFuture(Throwable t) {
+  public static <T> CompletableFuture<T> completedFuture(Throwable t) {
     CompletableFuture<T> future = new CompletableFuture<>();
     future.completeExceptionally(t);
     return future;

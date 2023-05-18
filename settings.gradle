@@ -10,6 +10,7 @@ pluginManagement {
 
 rootProject.name = "jaunt-rsocket-parent"
 
+include "rsocket-bom"
 include "rsocket-messages"
 include "rsocket-reactor"
 include "rsocket-rpc-reactor"
@@ -17,18 +18,24 @@ include "rsocket-rxjava"
 include "rsocket-rpc-rxjava"
 include "rsocket-mutiny"
 include "rsocket-rpc-mutiny"
-include "rsocket-futures"
-include "rsocket-rpc-futures"
 include "rsocket-grpc"
 include "rsocket-rpc-grpc"
 include "rsocket-rpc-idl"
-
-if (!isJava8Release()) {
-    include "rsocket-bom"
-    include "rsocket-helidon"
-    include "rsocket-rpc-helidon"
+include "rsocket-helidon"
+include "rsocket-rpc-helidon"
+include "rsocket-futures"
+include "rsocket-rpc-futures"
+if (includeVirtualThreads()) {
+    include "rsocket-rpc-virtualthreads"
 }
 
-boolean isJava8Release() {
-    return properties.get("release") == "true" && properties.get("target") == "java8"
+boolean includeVirtualThreads() {
+    if (properties.get("release") == "true") {
+        return true
+    }
+    if (!properties.containsKey("virtualthreads")) {
+        return false
+    }
+    def virtualthreads = properties.get("virtualthreads")
+    return virtualthreads == null || virtualthreads.isEmpty() || virtualthreads == "true"
 }

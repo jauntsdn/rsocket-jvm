@@ -32,9 +32,20 @@ subprojects {
         mavenCentral()
     }
 
-    def javaVersion = project.name.endsWith("helidon") ? 11 : 1.8
+    def javaVersion =
+            project.name.endsWith("virtualthreads") ? 20
+                    : project.name.endsWith("helidon") ? 11
+                    : 8
 
     plugins.withType(JavaLibraryPlugin) {
+        if (useToolchains()) {
+            java {
+                toolchain {
+                    languageVersion = JavaLanguageVersion.of(javaVersion)
+                }
+            }
+        }
+
         compileJava {
             sourceCompatibility = javaVersion
             targetCompatibility = javaVersion
@@ -112,6 +123,17 @@ def projectVersion(project) {
         }
     }
     return project.version + versionSuffix
+}
+
+def useToolchains() {
+    if (properties.get("release") == "true") {
+        return true
+    }
+    if (!project.hasProperty("toolchains")) {
+        return false
+    }
+    def toolchains = project.property("toolchains")
+    return toolchains == null || toolchains.isEmpty() || toolchains == "true"
 }
 
 defaultTasks "goJF", "clean", "build"

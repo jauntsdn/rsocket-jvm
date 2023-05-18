@@ -3,7 +3,6 @@
  */
 subprojects {
     def isRelease = isRelease(project)
-    def releasedModules = isRelease ? releaseModules(project) : []
 
     plugins.withType(MavenPublishPlugin) {
 
@@ -56,45 +55,40 @@ subprojects {
             }
 
             if (isRelease) {
-                if (releasedModules.contains(project.name)) {
-                    boolean hasRhOssCredentials = project.hasProperty("ossrhUsername") && project.hasProperty("ossrhPassword")
-                    if (!hasRhOssCredentials) {
-                        throw new GradleException("Release build lacks credentials properties: ossrhUsername, ossrhPassword")
+                boolean hasRhOssCredentials = project.hasProperty("ossrhUsername") && project.hasProperty("ossrhPassword")
+                if (!hasRhOssCredentials) {
+                    throw new GradleException("Release build lacks credentials properties: ossrhUsername, ossrhPassword")
+                }
+                task publishToSonatype {
+                    finalizedBy "publishMavenPublicationToSonatypeRepository"
+                    doLast {
+                        println "\nPublishing ${project.name} artifacts to Sonatype"
+                        println "Sonatype repository url: ${repositories.sonatype.url}\n"
+                        publishing.publications.maven.publishableArtifacts
+                                .collect { it.file.name }
+                                .sort { it }
+                                .each { println "[${project.name}] Uploading artifact..................${it}" }
                     }
-                    task publishToSonatype {
-                        finalizedBy "publishMavenPublicationToSonatypeRepository"
-                        doLast {
-                            println "\nPublishing ${project.name} artifacts to Sonatype"
-                            println "Sonatype repository url: ${repositories.sonatype.url}\n"
-                            publishing.publications.maven.publishableArtifacts
-                                    .collect { it.file.name }
-                                    .sort { it }
-                                    .each { println "[${project.name}] Uploading artifact..................${it}" }
-                        }
-                    }
+                }
 
-                    repositories {
-                        maven {
-                            name = "sonatype"
-                            def releasesRepoUrl = "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
-                            def snapshotsRepoUrl = "https://oss.sonatype.org/content/repositories/snapshots/"
-                            url = version.endsWith("SNAPSHOT") ? snapshotsRepoUrl : releasesRepoUrl
-                            credentials {
-                                username = project.property("ossrhUsername")
-                                password = project.property("ossrhPassword")
-                            }
+                repositories {
+                    maven {
+                        name = "sonatype"
+                        def releasesRepoUrl = "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
+                        def snapshotsRepoUrl = "https://oss.sonatype.org/content/repositories/snapshots/"
+                        url = version.endsWith("SNAPSHOT") ? snapshotsRepoUrl : releasesRepoUrl
+                        credentials {
+                            username = project.property("ossrhUsername")
+                            password = project.property("ossrhPassword")
                         }
                     }
-                } else {
-                    project.tasks.all { task -> task.enabled = false }
                 }
             }
         }
         plugins.withType(SigningPlugin) {
             signing {
-                def isSigned = isRelease && releasedModules.contains(project.name)
-                println("Publication signed: ${isSigned}")
-                if (isSigned) {
+                println("Publication signed: ${isRelease}")
+                if (isRelease) {
                     sign publishing.publications.maven
                 }
             }
@@ -104,28 +98,4 @@ subprojects {
 
 def isRelease(Project project) {
     return project.hasProperty("release") && project.property("release") == "true"
-}
-
-def releaseModules(Project project) {
-    if (!project.hasProperty("target")) {
-        throw new GradleException("Release build lacks target property: java8, java11")
-    }
-    def target = project.property("target")
-    def javaVersion = JavaVersion.current()
-    def releasedModules
-    if (target == "java8") {
-        if (!javaVersion.isJava8()) {
-            throw new GradleException("Invalid java version for java8 release: ${javaVersion}")
-        }
-        /*non-java8 modules are excluded in settings.gradle*/
-        releasedModules = project.parent.subprojects.collect { p -> p.name }
-    } else if (target == "java11") {
-        if (!javaVersion.isJava11()) {
-            throw new GradleException("Invalid java version for java11 release: ${javaVersion}")
-        }
-        releasedModules = ["rsocket-helidon", "rsocket-rpc-helidon", "rsocket-bom"]
-    } else {
-        throw new GradleException("Unsupported release target: ${target}")
-    }
-    return releasedModules
 }
