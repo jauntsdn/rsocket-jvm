@@ -17,11 +17,11 @@
 package com.jauntsdn.rsocket;
 
 import io.smallrye.mutiny.Multi;
-import org.reactivestreams.Publisher;
+import java.util.concurrent.Flow;
 
 public interface MessageStreamsHandler extends MessageStreams {
 
-  default Multi<Message> requestChannel(Message message, Publisher<Message> messages) {
+  default Multi<Message> requestChannel(Message message, Flow.Publisher<Message> messages) {
     return requestChannel(messages);
   }
 }

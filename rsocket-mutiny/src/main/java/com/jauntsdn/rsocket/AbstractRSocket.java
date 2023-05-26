@@ -18,7 +18,7 @@ package com.jauntsdn.rsocket;
 
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
-import org.reactivestreams.Publisher;
+import java.util.concurrent.Flow;
 
 public abstract class AbstractRSocket implements RSocketHandler {
 
@@ -44,13 +44,13 @@ public abstract class AbstractRSocket implements RSocketHandler {
   }
 
   @Override
-  public Multi<Message> requestChannel(Publisher<Message> messages) {
+  public Multi<Message> requestChannel(Flow.Publisher<Message> messages) {
     return Multi.createFrom()
         .failure(new UnsupportedOperationException("request-channel(messages) not implemented"));
   }
 
   @Override
-  public Multi<Message> requestChannel(Message message, Publisher<Message> messages) {
+  public Multi<Message> requestChannel(Message message, Flow.Publisher<Message> messages) {
     message.release();
     return Multi.createFrom()
         .failure(
