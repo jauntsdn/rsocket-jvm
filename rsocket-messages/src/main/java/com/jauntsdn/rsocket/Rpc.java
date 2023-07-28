@@ -82,6 +82,27 @@ public final class Rpc {
         int dataSize,
         int externalMetadataSize);
 
+    default ByteBuf encodeContent(
+        ByteBufAllocator allocator,
+        ByteBuf metadata,
+        String service,
+        String method,
+        boolean hasRequestN,
+        boolean isIdempotent,
+        int dataSize,
+        int externalMetadataSize) {
+      return encodeContent(
+          allocator,
+          metadata,
+          -1,
+          service,
+          method,
+          hasRequestN,
+          isIdempotent,
+          dataSize,
+          externalMetadataSize);
+    }
+
     Message encodeMessage(ByteBuf content, int rank);
 
     ByteBuf encodeContent(ByteBufAllocator allocator, int dataSize);
@@ -285,6 +306,27 @@ public final class Rpc {
         }
       }
       return null;
+    }
+  }
+
+  public static final class ProtoMetadata {
+
+    private ProtoMetadata() {}
+
+    public static Headers createHeaders(List<String> headers) {
+      return Headers.create(headers);
+    }
+
+    public static List<String> getHeaders(Headers headers) {
+      return headers.headers();
+    }
+
+    public static ByteBuf getCache(Headers headers) {
+      return headers.cache();
+    }
+
+    public static void setCache(Headers headers, ByteBuf cache) {
+      headers.cache(cache);
     }
   }
 }
