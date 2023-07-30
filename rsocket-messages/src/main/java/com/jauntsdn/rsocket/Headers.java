@@ -146,6 +146,14 @@ public final class Headers {
     return new Headers(isDefaultService, Arrays.asList(headers));
   }
 
+  public static Headers empty() {
+    return EMPTY;
+  }
+
+  public static Headers withDefaultService() {
+    return DEFAULT_SERVICE;
+  }
+
   public static Headers.Builder newBuilder() {
     return new Builder(4, Collections.emptyList());
   }
