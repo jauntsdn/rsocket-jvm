@@ -20,8 +20,8 @@ import io.netty.buffer.ByteBufAllocator;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import java.util.Optional;
+import java.util.concurrent.Flow;
 import java.util.concurrent.ScheduledExecutorService;
-import org.reactivestreams.Publisher;
 
 public class RSocketProxy implements RSocket, RSocketHandler {
   protected final MessageStreams source;
@@ -46,12 +46,12 @@ public class RSocketProxy implements RSocket, RSocketHandler {
   }
 
   @Override
-  public Multi<Message> requestChannel(Publisher<Message> messages) {
+  public Multi<Message> requestChannel(Flow.Publisher<Message> messages) {
     return source.requestChannel(messages);
   }
 
   @Override
-  public Multi<Message> requestChannel(Message message, Publisher<Message> messages) {
+  public Multi<Message> requestChannel(Message message, Flow.Publisher<Message> messages) {
     MessageStreams s = source;
     if (s instanceof MessageStreamsHandler) {
       return ((MessageStreamsHandler) s).requestChannel(message, messages);

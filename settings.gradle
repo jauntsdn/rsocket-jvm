@@ -10,6 +10,8 @@ pluginManagement {
 
 rootProject.name = "jaunt-rsocket-parent"
 
+include "rsocket-rpc-idl"
+include "rsocket-rpc-metadata-idl"
 include "rsocket-bom"
 include "rsocket-messages"
 include "rsocket-reactor"
@@ -20,7 +22,6 @@ include "rsocket-mutiny"
 include "rsocket-rpc-mutiny"
 include "rsocket-grpc"
 include "rsocket-rpc-grpc"
-include "rsocket-rpc-idl"
 include "rsocket-helidon"
 include "rsocket-rpc-helidon"
 include "rsocket-futures"

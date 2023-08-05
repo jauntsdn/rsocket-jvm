@@ -26,9 +26,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Flow;
 import java.util.function.Consumer;
 import javax.annotation.Nullable;
-import org.reactivestreams.Publisher;
 
 public final class RpcHandler implements MessageStreamsHandler {
   private static final String NO_DEFAULT_ZERO_SERVICES_MESSAGE =
@@ -185,14 +185,14 @@ public final class RpcHandler implements MessageStreamsHandler {
   }
 
   @Override
-  public Multi<Message> requestChannel(Publisher<Message> messages) {
+  public Multi<Message> requestChannel(Flow.Publisher<Message> messages) {
     return Multi.createFrom()
         .failure(
             new RpcException("RpcHandler: unsupported method: requestChannel(Publisher<Payload>)"));
   }
 
   @Override
-  public Multi<Message> requestChannel(Message message, Publisher<Message> messages) {
+  public Multi<Message> requestChannel(Message message, Flow.Publisher<Message> messages) {
     try {
       String serviceName = service(message.metadata());
 

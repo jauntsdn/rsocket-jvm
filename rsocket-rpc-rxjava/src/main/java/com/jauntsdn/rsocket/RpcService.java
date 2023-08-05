@@ -16,6 +16,14 @@
 
 package com.jauntsdn.rsocket;
 
+import io.netty.buffer.ByteBufAllocator;
+import io.reactivex.rxjava3.annotations.NonNull;
+import io.reactivex.rxjava3.core.CompletableObserver;
+import io.reactivex.rxjava3.disposables.Disposable;
+import java.util.Objects;
+import java.util.Optional;
+import javax.annotation.Nullable;
+
 public interface RpcService extends MessageStreamsHandler {
 
   String service();
@@ -25,5 +33,68 @@ public interface RpcService extends MessageStreamsHandler {
   interface Factory<T extends MessageStreamsHandler> {
 
     T withLifecycle(Closeable requester);
+  }
+
+  @SuppressWarnings("all")
+  abstract class ServerFactory<T extends MessageStreamsHandler> implements RpcService.Factory<T> {
+    private final Object service;
+    private final Optional<RpcInstrumentation> instrumentation;
+
+    public ServerFactory(Object service, Optional<RpcInstrumentation> instrumentation) {
+      this.service = Objects.requireNonNull(service, "service");
+      this.instrumentation = Objects.requireNonNull(instrumentation, "instrumentation");
+    }
+
+    public ServerFactory(Object service) {
+      this.service = Objects.requireNonNull(service, "service");
+      this.instrumentation = null;
+    }
+
+    protected final <S> S service() {
+      return (S) service;
+    }
+
+    @Override
+    public final T withLifecycle(Closeable requester) {
+      Objects.requireNonNull(requester, "requester");
+      Rpc.Codec rpcCodec = requester.attributes().attr(Attributes.RPC_CODEC);
+      if (rpcCodec != null) {
+        if (rpcCodec.isDisposable()) {
+          requester
+              .onClose()
+              .subscribe(
+                  new OnComplete() {
+                    @Override
+                    public void onComplete() {
+                      rpcCodec.dispose();
+                    }
+                  });
+        }
+        ByteBufAllocator alloc = requester.attributes().attr(Attributes.ALLOCATOR);
+        ByteBufAllocator allocator = alloc != null ? alloc : ByteBufAllocator.DEFAULT;
+        Optional<RpcInstrumentation> instr = instrumentation;
+        RpcInstrumentation rpcInstrumentation =
+            instr == null
+                ? requester.attributes().attr(Attributes.RPC_INSTRUMENTATION)
+                : instr.orElse(null);
+        return create(rpcInstrumentation, allocator, rpcCodec);
+      }
+      throw new IllegalArgumentException(
+          "Requester " + requester.getClass() + " does not provide RPC codec");
+    }
+
+    public abstract T create(
+        @Nullable RpcInstrumentation rpcInstrumentation,
+        ByteBufAllocator allocator,
+        Rpc.Codec codec);
+
+    private abstract static class OnComplete implements CompletableObserver {
+
+      @Override
+      public void onSubscribe(@NonNull Disposable d) {}
+
+      @Override
+      public void onError(@NonNull Throwable e) {}
+    }
   }
 }

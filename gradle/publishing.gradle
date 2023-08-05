@@ -38,9 +38,9 @@ subprojects {
                             }
                         }
                         scm {
-                            connection = "scm:git:https://github.com/jauntsdn/rsocket.git"
-                            developerConnection = "scm:git:https://github.com/jauntsdn/rsocket.git"
-                            url = "https://github.com/jauntsdn/rsocket"
+                            connection = "scm:git:https://github.com/jauntsdn/rsocket-jvm.git"
+                            developerConnection = "scm:git:https://github.com/jauntsdn/rsocket-jvm.git"
+                            url = "https://github.com/jauntsdn/rsocket-jvm"
                         }
                         versionMapping {
                             usage("java-api") {

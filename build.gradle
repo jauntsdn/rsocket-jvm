@@ -32,9 +32,10 @@ subprojects {
         mavenCentral()
     }
 
+    def name = project.name
     def javaVersion =
-            project.name.endsWith("virtualthreads") ? 20
-                    : project.name.endsWith("helidon") ? 11
+            name.endsWith("virtualthreads") ? 20
+                    : name.endsWith("helidon") || name.endsWith("mutiny") ? 11
                     : 8
 
     plugins.withType(JavaLibraryPlugin) {

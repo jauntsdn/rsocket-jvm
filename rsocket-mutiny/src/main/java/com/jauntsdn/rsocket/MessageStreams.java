@@ -20,8 +20,8 @@ import io.netty.buffer.ByteBufAllocator;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import java.util.Optional;
+import java.util.concurrent.Flow;
 import java.util.concurrent.ScheduledExecutorService;
-import org.reactivestreams.Publisher;
 
 public interface MessageStreams extends Closeable {
 
@@ -31,7 +31,7 @@ public interface MessageStreams extends Closeable {
 
   Multi<Message> requestStream(Message message);
 
-  Multi<Message> requestChannel(Publisher<Message> messages);
+  Multi<Message> requestChannel(Flow.Publisher<Message> messages);
 
   default Optional<Message.Factory> messageFactory() {
     return Optional.empty();
