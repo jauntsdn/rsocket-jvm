@@ -27,16 +27,18 @@ import java.util.NoSuchElementException;
 import java.util.Objects;
 
 public final class Headers {
-  private static final Headers EMPTY = new Headers(false, Collections.emptyList());
-  private static final Headers DEFAULT_SERVICE = new Headers(true, Collections.emptyList());
+  private static final Headers EMPTY = new Headers(false, Collections.emptyList(), 0);
+  private static final Headers DEFAULT_SERVICE = new Headers(true, Collections.emptyList(), 0);
 
   private final boolean isDefaultService;
+  private final int serializedSize;
   private final List<String> nameValues;
   private volatile ByteBuf cache;
 
-  private Headers(boolean isDefaultService, List<String> nameValues) {
+  private Headers(boolean isDefaultService, List<String> nameValues, int serializedSize) {
     this.isDefaultService = isDefaultService;
     this.nameValues = nameValues;
+    this.serializedSize = serializedSize;
   }
 
   public boolean isDefaultService() {
@@ -139,11 +141,11 @@ public final class Headers {
   }
 
   public static Headers create(boolean isDefaultService, String... headers) {
-    requireValid(headers, "headers");
+    int serializedSize = requireValid(headers, "headers");
     if (headers.length == 0) {
       return isDefaultService ? DEFAULT_SERVICE : EMPTY;
     }
-    return new Headers(isDefaultService, Arrays.asList(headers));
+    return new Headers(isDefaultService, Arrays.asList(headers), serializedSize);
   }
 
   public static Headers empty() {
@@ -163,11 +165,11 @@ public final class Headers {
   }
 
   static Headers create(List<String> headers) {
-    requireValid(headers, "headers");
+    int serializedSize = requireValid(headers, "headers");
     if (headers.isEmpty()) {
       return EMPTY;
     }
-    return new Headers(false, headers);
+    return new Headers(false, headers, serializedSize);
   }
 
   ByteBuf cache() {
@@ -184,9 +186,14 @@ public final class Headers {
     return nameValues;
   }
 
+  public int serializedSize() {
+    return serializedSize;
+  }
+
   public static final class Builder {
     private final List<String> nameValues;
     private boolean isDefaultService;
+    private int serializedSize;
 
     private Builder(int size, List<String> headers) {
       int length = headers.size();
@@ -215,6 +222,8 @@ public final class Headers {
       List<String> nv = nameValues;
       nv.add(name);
       nv.add(value);
+      serializedSize +=
+          Rpc.ProtoMetadata.serializedSize(name) + Rpc.ProtoMetadata.serializedSize(value);
       return this;
     }
 
@@ -223,8 +232,14 @@ public final class Headers {
       List<String> nv = nameValues;
       for (int i = nv.size() - 2; i >= 0; i -= 2) {
         if (name.equals(nv.get(i))) {
-          nv.remove(i + 1);
-          nv.remove(i);
+          String removedValue = nv.remove(i + 1);
+          String removedName = nv.remove(i);
+          if (removedValue != null) {
+            serializedSize -= Rpc.ProtoMetadata.serializedSize(removedValue);
+          }
+          if (removedName != null) {
+            serializedSize -= Rpc.ProtoMetadata.serializedSize(removedName);
+          }
         }
       }
       return this;
@@ -236,15 +251,21 @@ public final class Headers {
       List<String> nv = nameValues;
       for (int i = nv.size() - 2; i >= 0; i -= 2) {
         if (name.equals(nv.get(i)) && value.equals(nv.get(i + 1))) {
-          nv.remove(i + 1);
-          nv.remove(i);
+          String removedValue = nv.remove(i + 1);
+          String removedName = nv.remove(i);
+          if (removedValue != null) {
+            serializedSize -= Rpc.ProtoMetadata.serializedSize(removedValue);
+          }
+          if (removedName != null) {
+            serializedSize -= Rpc.ProtoMetadata.serializedSize(removedName);
+          }
         }
       }
       return this;
     }
 
     public Headers build() {
-      return new Headers(isDefaultService, nameValues);
+      return new Headers(isDefaultService, nameValues, serializedSize);
     }
   }
 
@@ -256,13 +277,14 @@ public final class Headers {
     return seq;
   }
 
-  private static List<String> requireValid(List<String> keyValues, String message) {
+  private static int requireValid(List<String> keyValues, String message) {
     Objects.requireNonNull(keyValues, "keyValues");
-    int size = keyValues.size();
-    if (size % 2 != 0) {
+    int length = keyValues.size();
+    if (length % 2 != 0) {
       throw new IllegalArgumentException(message + " size must be even");
     }
-    for (int i = 0; i < size; i++) {
+    int size = 0;
+    for (int i = 0; i < length; i++) {
       String kv = keyValues.get(i);
       if (kv == null) {
         throw new IllegalArgumentException(message + " elements must be non-null");
@@ -271,16 +293,18 @@ public final class Headers {
       if (isKey && kv.isEmpty()) {
         throw new IllegalArgumentException(message + " keys must be non-empty");
       }
+      size += Rpc.ProtoMetadata.serializedSize(kv);
     }
-    return keyValues;
+    return size;
   }
 
-  private static String[] requireValid(String[] keyValues, String message) {
+  private static int requireValid(String[] keyValues, String message) {
     Objects.requireNonNull(keyValues, "keyValues");
     int length = keyValues.length;
     if (length % 2 != 0) {
       throw new IllegalArgumentException(message + " size must be even");
     }
+    int size = 0;
     for (int i = 0; i < length; i++) {
       String kv = keyValues[i];
       if (kv == null) {
@@ -290,7 +314,8 @@ public final class Headers {
       if (isKey && kv.isEmpty()) {
         throw new IllegalArgumentException(message + " keys must be non-empty");
       }
+      size += Rpc.ProtoMetadata.serializedSize(kv);
     }
-    return keyValues;
+    return size;
   }
 }
