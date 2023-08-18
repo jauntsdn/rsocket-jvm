@@ -1,0 +1,68 @@
+/*
+ * Copyright 2020 - present Maksym Ostroverkhov.
+ */
+
+plugins {
+    id "java"
+    id "com.google.protobuf"
+    id "idea"
+}
+
+dependencies {
+    protobuf project(":rsocket-rpc-metadata-idl")
+    implementation "com.google.protobuf:protobuf-java"
+
+    testImplementation project(":rsocket-messages")
+    testImplementation "org.junit.jupiter:junit-jupiter-api"
+    testImplementation "org.junit.jupiter:junit-jupiter-params"
+    testImplementation "org.assertj:assertj-core"
+
+    testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine"
+}
+
+sourceSets {
+    main {
+        java { srcDir "src/generated" }
+    }
+}
+
+test {
+    useJUnitPlatform()
+
+    testLogging {
+        events "failed"
+        exceptionFormat "full"
+    }
+}
+
+/*generate proto on build*/
+if (findProperty("generateProto") == "true") {
+    protobuf {
+        generatedFilesBaseDir = "${projectDir}/src/generated"
+        protoc {
+            artifact = "com.google.protobuf:protoc"
+        }
+    }
+
+    clean {
+        delete "src/generated"
+    }
+/*skip generate proto on build (default)*/
+} else {
+    tasks.whenTaskAdded { task ->
+        if (task.name.contains("generateProto")) {
+            task.enabled = false
+        }
+    }
+}
+
+idea {
+    module {
+        sourceDirs += file("src/main/proto")
+        sourceDirs += file("src/generated/main/java")
+
+        generatedSourceDirs += file("src/generated/main/java")
+    }
+}
+
+description = "RSocket-jvm tests module"
