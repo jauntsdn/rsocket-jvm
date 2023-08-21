@@ -338,7 +338,6 @@ public final class Rpc {
 
     private static final int LEN_TAG = /*field*/ 1 << 3 | /*wire type LEN*/ 2;
     private static final int VARINT_BYTE_MAX = 128;
-    private static final int HEADER_LENGTH_MAX = 8192;
 
     public static ByteBuf encodeHeaders(Headers headers) {
       Objects.requireNonNull(headers, "headers");
@@ -404,13 +403,13 @@ public final class Rpc {
           byte lenEnd = metadata.readByte();
           if ((lenEnd & /*cont bit*/ 0x80) != 0) {
             throw new MetadataException(
-                "unexpected protobuf metadata header length, exceeds " + HEADER_LENGTH_MAX);
+                "unexpected protobuf metadata header length, exceeds " + Headers.HEADER_LENGTH_MAX);
           }
           len = lenStart & 0x7F | lenEnd << 7;
-          if (len > HEADER_LENGTH_MAX) {
+          if (len > Headers.HEADER_LENGTH_MAX) {
             throw new MetadataException(
                 "unexpected protobuf metadata header length, exceeds "
-                    + HEADER_LENGTH_MAX
+                    + Headers.HEADER_LENGTH_MAX
                     + ": "
                     + len);
           }
