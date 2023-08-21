@@ -16,7 +16,7 @@
 
 package com.jauntsdn.rsocket;
 
-import com.jauntsdn.rsocket.exceptions.MetadataException;
+import com.jauntsdn.rsocket.exceptions.ApplicationErrorException;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
 import io.netty.buffer.ByteBufUtil;
@@ -386,13 +386,13 @@ public final class Rpc {
       int remaining = metadata.readableBytes();
       do {
         if (remaining < 2) {
-          throw new MetadataException("unexpected metadata structure");
+          throw new ApplicationErrorException("unexpected metadata structure");
         }
         remaining -= Short.BYTES;
         short tagLenStart = metadata.readShort();
         int tag = tagLenStart >> 8;
         if (tag != LEN_TAG) {
-          throw new MetadataException("unexpected protobuf metadata message tag: " + tag);
+          throw new ApplicationErrorException("unexpected protobuf metadata message tag: " + tag);
         }
         int lenStart = tagLenStart & 0xFF;
         int len;
@@ -402,12 +402,12 @@ public final class Rpc {
           remaining -= Byte.BYTES;
           byte lenEnd = metadata.readByte();
           if ((lenEnd & /*cont bit*/ 0x80) != 0) {
-            throw new MetadataException(
+            throw new ApplicationErrorException(
                 "unexpected protobuf metadata header length, exceeds " + Headers.HEADER_LENGTH_MAX);
           }
           len = lenStart & 0x7F | lenEnd << 7;
           if (len > Headers.HEADER_LENGTH_MAX) {
-            throw new MetadataException(
+            throw new ApplicationErrorException(
                 "unexpected protobuf metadata header length, exceeds "
                     + Headers.HEADER_LENGTH_MAX
                     + ": "

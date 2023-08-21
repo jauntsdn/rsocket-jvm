@@ -28,8 +28,8 @@ import java.util.Objects;
 import javax.annotation.Nullable;
 
 /**
- * RPC metadata headers: list of ASCII key-value pairs, both key and value are
- * limited to 8192 characters, values are allowed to be empty.
+ * RPC metadata headers: list of ASCII key-value pairs, both key and value are limited to 8192
+ * characters, values are allowed to be empty.
  */
 public final class Headers {
   public static int HEADER_LENGTH_MAX = 8192;

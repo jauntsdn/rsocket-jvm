@@ -16,7 +16,7 @@
 
 package com.jauntsdn.rsocket;
 
-import com.jauntsdn.rsocket.exceptions.MetadataException;
+import com.jauntsdn.rsocket.exceptions.ApplicationErrorException;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
 import io.netty.buffer.Unpooled;
@@ -103,7 +103,7 @@ public class ProtobufMetadataTest {
     ByteBuf metadata = encodeProtobufJava(Arrays.asList(key, value));
     try {
       org.junit.jupiter.api.Assertions.assertThrows(
-          MetadataException.class,
+          ApplicationErrorException.class,
           () -> {
             Headers headers = Rpc.ProtoMetadata.decodeHeaders(metadata);
           });
