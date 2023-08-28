@@ -16,14 +16,21 @@
 
 package com.jauntsdn.rsocket;
 
+import com.jauntsdn.rsocket.exceptions.ApplicationErrorException;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
+import io.netty.buffer.ByteBufUtil;
+import io.netty.buffer.Unpooled;
+import io.netty.buffer.UnpooledByteBufAllocator;
+import io.netty.buffer.UnpooledHeapByteBuf;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public final class Rpc {
 
@@ -327,6 +334,93 @@ public final class Rpc {
 
     public static void setCache(Headers headers, ByteBuf cache) {
       headers.cache(cache);
+    }
+
+    private static final int LEN_TAG = /*field*/ 1 << 3 | /*wire type LEN*/ 2;
+    private static final int VARINT_BYTE_MAX = 128;
+
+    public static ByteBuf encodeHeaders(Headers headers) {
+      Objects.requireNonNull(headers, "headers");
+      if (headers.isEmpty()) {
+        return Unpooled.EMPTY_BUFFER;
+      }
+      ByteBuf cache = headers.cache();
+      if (cache != null) {
+        return cache;
+      }
+      int serializedSize = headers.serializedSize();
+      ByteBuf byteBuf =
+          new UnpooledHeapByteBuf(UnpooledByteBufAllocator.DEFAULT, serializedSize, serializedSize);
+
+      List<String> asciiHeaders = headers.headers();
+      for (int i = 0; i < asciiHeaders.size(); i++) {
+        String asciiHeader = asciiHeaders.get(i);
+        encodeLen(byteBuf, asciiHeader.length());
+        ByteBufUtil.writeAscii(byteBuf, asciiHeader);
+      }
+      headers.cache(byteBuf);
+      return byteBuf;
+    }
+
+    static void encodeLen(ByteBuf byteBuf, int len) {
+      if (len < VARINT_BYTE_MAX) {
+        byteBuf.writeShort(LEN_TAG << 8 | len);
+      } else {
+        byteBuf.writeByte(LEN_TAG);
+        int varintLen = (len & 0x7F | /*cont bit*/ 0x80) << 8 | ((len >> 7) & 0x7F);
+        byteBuf.writeShort(varintLen);
+      }
+    }
+
+    static int serializedSize(String asciiString) {
+      int headerLength = asciiString.length();
+      return headerLength < VARINT_BYTE_MAX ? headerLength + 2 : headerLength + 3;
+    }
+
+    public static Headers decodeHeaders(ByteBuf metadata) {
+      Objects.requireNonNull(metadata, "metadata");
+      if (metadata.readableBytes() == 0) {
+        return Headers.empty();
+      }
+      List<String> headers = null;
+      int remaining = metadata.readableBytes();
+      do {
+        if (remaining < 2) {
+          throw new ApplicationErrorException("unexpected metadata structure");
+        }
+        remaining -= Short.BYTES;
+        short tagLenStart = metadata.readShort();
+        int tag = tagLenStart >> 8;
+        if (tag != LEN_TAG) {
+          throw new ApplicationErrorException("unexpected protobuf metadata message tag: " + tag);
+        }
+        int lenStart = tagLenStart & 0xFF;
+        int len;
+        if ((lenStart & /*cont bit*/ 0x80) == 0) {
+          len = lenStart & 0x7F;
+        } else {
+          remaining -= Byte.BYTES;
+          byte lenEnd = metadata.readByte();
+          if ((lenEnd & /*cont bit*/ 0x80) != 0) {
+            throw new ApplicationErrorException(
+                "unexpected protobuf metadata header length, exceeds " + Headers.HEADER_LENGTH_MAX);
+          }
+          len = lenStart & 0x7F | lenEnd << 7;
+          if (len > Headers.HEADER_LENGTH_MAX) {
+            throw new ApplicationErrorException(
+                "unexpected protobuf metadata header length, exceeds "
+                    + Headers.HEADER_LENGTH_MAX
+                    + ": "
+                    + len);
+          }
+        }
+        if (headers == null) {
+          headers = new ArrayList<>(4);
+        }
+        remaining -= len;
+        headers.add(metadata.readCharSequence(len, StandardCharsets.US_ASCII).toString());
+      } while (remaining > 0);
+      return Headers.create(headers);
     }
   }
 }

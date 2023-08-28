@@ -9,6 +9,7 @@ subprojects {
         imports {
             mavenBom "io.netty:netty-bom:${nettyBomVersion}"
             mavenBom "io.projectreactor:reactor-bom:${reactorBomVersion}"
+            mavenBom "org.junit:junit-bom:${junitVersion}"
         }
 
         dependencies {
@@ -20,6 +21,10 @@ subprojects {
             dependency "javax.inject:javax.inject:${javaxInjectVersion}"
             dependency "javax.annotation:javax.annotation-api:${javaxAnnotationVersion}"
             dependency "com.google.code.findbugs:jsr305:${jsr305Version}"
+
+            dependency "com.google.protobuf:protobuf-java:${protobufVersion}"
+            dependency "com.google.protobuf:protoc:${protobufVersion}"
+            dependency "org.assertj:assertj-core:${assertjVersion}"
         }
         generatedPomCustomization {
             enabled = false

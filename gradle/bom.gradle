@@ -18,6 +18,6 @@ ext.removeDependencyScope = { pom ->
 
 ext.managedDependencyModules = { parent ->
     parent.subprojects
-            .findAll { !it.name.endsWith("bom")}
+            .findAll { !it.name.endsWith("bom") && !it.name.endsWith("test")}
             .sort { "$it.name" }
 }

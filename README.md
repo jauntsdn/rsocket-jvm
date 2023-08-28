@@ -13,7 +13,7 @@ Very fast GRPC-like & GRPC-compatible services on JVM with rich streaming models
 
 >multiple APIs: CompletableFuture or virtual threads; traditional streaming with GRPC-API (StreamObserver), or flavor of reactive: smallrye-mutiny, rxjava, reactor;
 > 
->pluggable networking: TCP, unix sockets, GRPC, websockets, websockets-over-http2;
+>pluggable networking: TCP, unix sockets, VM sockets, GRPC, websockets, websockets-over-http2;
 > 
 >service APIs / RPC codegen stubs (Message-Streams) are split from library runtime (RSocket-JVM, including network transports, load estimators, metrics);
 > 
@@ -46,7 +46,7 @@ Project supports 3 kinds of APIs:
 **GRPC compatible**. All implementations are directly compatible with GRPC via MessageStreams-RPC & GRPC transport.
 GRPC clients can access such services without separate "gateway" binaries and IDL sharing schemes.
  
-**Non-intrusive**. [MessageStreams](https://github.com/jauntsdn/rsocket-jvm/blob/1.4.0/rsocket-reactor/src/main/java/com/jauntsdn/rsocket/MessageStreams.java) API & [RSocket-JVM](https://github.com/jauntsdn/rsocket-jvm/blob/1.4.0/rsocket-reactor/src/main/java/com/jauntsdn/rsocket/RSocket.java) runtime are clearly split so from end-user perspective there is 
+**Non-intrusive**. [MessageStreams](https://github.com/jauntsdn/rsocket-jvm/blob/1.5.0/rsocket-reactor/src/main/java/com/jauntsdn/rsocket/MessageStreams.java) API & [RSocket-JVM](https://github.com/jauntsdn/rsocket-jvm/blob/1.5.0/rsocket-reactor/src/main/java/com/jauntsdn/rsocket/RSocket.java) runtime are clearly split so from end-user perspective there is 
 only set of streaming & non-streaming interactions on buffers/messages:
 
 ```groovy
@@ -77,7 +77,7 @@ Network transports are based on `Netty` only for compatibility with each vendor 
 
 Currently comprised of 
 
-* `TCP` & `UNIX domain sockets` - known efficient byte stream protocols for datacenter / inter-process communication;
+* `TCP`, `UNIX domain sockets` & `VM sockets` - known efficient byte stream protocols for datacenter / inter-process communication;
 
 and Http2 streams based transports for interop:
 
@@ -95,7 +95,8 @@ and Http2 streams based transports for interop:
 
 ## Build
 
-Building `jauntsdn/RSocket-jvm` requires java11+ (for helidon-commons-reactive), while the rest (futures/grpc-stubs/rxjava/reactor/mutiny) are java8+. 
+Building `jauntsdn/RSocket-jvm` requires java20 for virtual threads API, java11+ for smallrye-mutiny; 
+futures / grpc-stubs / rxjava / reactor are java8+. 
 ```
 ./gradlew
 ```
@@ -107,7 +108,7 @@ Building & installing artifacts into local maven repository
 
 ## Binaries
 
-Binary releases are published on Maven Central for grpc, futures (CompletableFuture), reactor, rxjava, helidon & mutiny libraries.
+Binary releases are published on Maven Central for virtual threads, futures (CompletableFuture), grpc stubs, reactor, rxjava & mutiny libraries.
 
 ```groovy
 
@@ -116,10 +117,10 @@ repositories {
 }
 
 dependencies {
-    implementation "com.jauntsdn.rsocket:rsocket-messages:1.4.0"
-    implementation "com.jauntsdn.rsocket:rsocket-rpc-idl:1.4.0"
-    implementation "com.jauntsdn.rsocket:rsocket-<VENDOR>:1.4.0"
-    implementation "com.jauntsdn.rsocket:rsocket-rpc-<VENDOR>:1.4.0"
+    implementation "com.jauntsdn.rsocket:rsocket-messages:1.5.0"
+    implementation "com.jauntsdn.rsocket:rsocket-rpc-idl:1.5.0"
+    implementation "com.jauntsdn.rsocket:rsocket-<VENDOR>:1.5.0"
+    implementation "com.jauntsdn.rsocket:rsocket-rpc-<VENDOR>:1.5.0"
 }
 ```
 
@@ -128,7 +129,7 @@ MessageStreams-RPC compiler binaries are linux, windows(x86) only
 protobuf {
      plugins {
           rsocketRpc {
-              artifact = "com.jauntsdn.rsocket:rsocket-rpc-<VENDOR>-compiler:1.4.0"
+              artifact = "com.jauntsdn.rsocket:rsocket-rpc-<VENDOR>-compiler:1.5.0"
           }
      }
 }
@@ -162,8 +163,8 @@ is essential for JVM-only Message Streams (RSocket-JVM) libraries.
 **Shared transports**
 
 Transports are shared, and considered part of runtime due to tight contract with RSocket-JVM for performance reasons. 
-This project offers strictly few highly optimized transports for interprocess/datacenter (TCP, UNIX sockets) 
-and cross-datacenter (GRPC-RSocketRPC, websocket, websocket-over-htp2) communication, instead of user-friendly APIs for
+This project offers strictly few highly optimized transports for interprocess/datacenter (TCP, UNIX sockets, VM sockets) 
+and cross-datacenter (GRPC-RSocketRPC, websocket, websocket-over-http2) communication, instead of user-friendly APIs for
 external implementors. This way if supported transports are extended or replaced, transport contract
 is free to change to accommodate new needs.   
 

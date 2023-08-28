@@ -25,18 +25,27 @@ import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Objects;
+import javax.annotation.Nullable;
 
+/**
+ * RPC metadata headers: list of ASCII key-value pairs, both key and value are limited to 8192
+ * characters, values are allowed to be empty.
+ */
 public final class Headers {
-  private static final Headers EMPTY = new Headers(false, Collections.emptyList());
-  private static final Headers DEFAULT_SERVICE = new Headers(true, Collections.emptyList());
+  public static int HEADER_LENGTH_MAX = 8192;
+
+  private static final Headers EMPTY = new Headers(false, Collections.emptyList(), 0);
+  private static final Headers DEFAULT_SERVICE = new Headers(true, Collections.emptyList(), 0);
 
   private final boolean isDefaultService;
-  private final List<String> nameValues;
+  private final int serializedSize;
+  private final List<String> keyValues;
   private volatile ByteBuf cache;
 
-  private Headers(boolean isDefaultService, List<String> nameValues) {
+  private Headers(boolean isDefaultService, List<String> keyValues, int serializedSize) {
     this.isDefaultService = isDefaultService;
-    this.nameValues = nameValues;
+    this.keyValues = keyValues;
+    this.serializedSize = serializedSize;
   }
 
   public boolean isDefaultService() {
@@ -44,8 +53,10 @@ public final class Headers {
   }
 
   public String header(String name) {
-    requireNonEmpty(name, " name");
-    List<String> nv = nameValues;
+    if (!isValidKeySize(name)) {
+      return null;
+    }
+    List<String> nv = keyValues;
     int length = nv.size();
     for (int i = 0; i < length; i += 2) {
       if (name.equals(nv.get(i))) {
@@ -56,10 +67,11 @@ public final class Headers {
   }
 
   public List<String> headers(String name) {
-    requireNonEmpty(name, " name");
-
+    if (!isValidKeySize(name)) {
+      return null;
+    }
     List<String> headers = null;
-    List<String> nv = nameValues;
+    List<String> nv = keyValues;
     int length = nv.size();
     for (int i = 0; i < length; i += 2) {
       if (name.equals(nv.get(i))) {
@@ -73,15 +85,15 @@ public final class Headers {
   }
 
   public boolean isEmpty() {
-    return nameValues.isEmpty();
+    return keyValues.isEmpty();
   }
 
   public int size() {
-    return nameValues.size() / 2;
+    return keyValues.size() / 2;
   }
 
   public Iterator<Map.Entry<String, String>> iterator() {
-    List<String> nv = nameValues;
+    List<String> nv = keyValues;
     if (nv.isEmpty()) {
       return Collections.emptyIterator();
     }
@@ -123,15 +135,15 @@ public final class Headers {
 
   @Override
   public String toString() {
-    return "Headers{" + "isDefaultService=" + isDefaultService + ", nameValues=" + nameValues + '}';
+    return "Headers{" + "isDefaultService=" + isDefaultService + ", keyValues=" + keyValues + '}';
   }
 
   public Headers.Builder toBuilder() {
-    return new Builder(4, nameValues);
+    return new Builder(4, keyValues);
   }
 
   public Headers.Builder toBuilder(int additionalSize) {
-    return new Builder(additionalSize, nameValues);
+    return new Builder(additionalSize, keyValues);
   }
 
   public static Headers create(String... headers) {
@@ -139,11 +151,11 @@ public final class Headers {
   }
 
   public static Headers create(boolean isDefaultService, String... headers) {
-    requireValid(headers, "headers");
+    int serializedSize = requireValid(headers, "headers");
     if (headers.length == 0) {
       return isDefaultService ? DEFAULT_SERVICE : EMPTY;
     }
-    return new Headers(isDefaultService, Arrays.asList(headers));
+    return new Headers(isDefaultService, Arrays.asList(headers), serializedSize);
   }
 
   public static Headers empty() {
@@ -163,11 +175,11 @@ public final class Headers {
   }
 
   static Headers create(List<String> headers) {
-    requireValid(headers, "headers");
+    int serializedSize = requireValid(headers, "headers");
     if (headers.isEmpty()) {
       return EMPTY;
     }
-    return new Headers(false, headers);
+    return new Headers(false, headers, serializedSize);
   }
 
   ByteBuf cache() {
@@ -181,12 +193,17 @@ public final class Headers {
   }
 
   List<String> headers() {
-    return nameValues;
+    return keyValues;
+  }
+
+  public int serializedSize() {
+    return serializedSize;
   }
 
   public static final class Builder {
     private final List<String> nameValues;
     private boolean isDefaultService;
+    private int serializedSize;
 
     private Builder(int size, List<String> headers) {
       int length = headers.size();
@@ -209,42 +226,59 @@ public final class Headers {
     }
 
     public Builder add(String name, String value) {
-      requireNonEmpty(name, " name");
-      requireNonEmpty(value, " value");
+      requireValidKeySize(name, " name");
+      requireValidValueSize(value, " value");
 
       List<String> nv = nameValues;
       nv.add(name);
       nv.add(value);
+      serializedSize +=
+          Rpc.ProtoMetadata.serializedSize(name) + Rpc.ProtoMetadata.serializedSize(value);
       return this;
     }
 
     public Builder remove(String name) {
-      requireNonEmpty(name, " name");
+      if (!isValidKeySize(name)) {
+        return this;
+      }
       List<String> nv = nameValues;
       for (int i = nv.size() - 2; i >= 0; i -= 2) {
         if (name.equals(nv.get(i))) {
-          nv.remove(i + 1);
-          nv.remove(i);
+          String removedValue = nv.remove(i + 1);
+          String removedName = nv.remove(i);
+          if (removedValue != null) {
+            serializedSize -= Rpc.ProtoMetadata.serializedSize(removedValue);
+          }
+          if (removedName != null) {
+            serializedSize -= Rpc.ProtoMetadata.serializedSize(removedName);
+          }
         }
       }
       return this;
     }
 
     public Builder remove(String name, String value) {
-      requireNonEmpty(name, " name");
-      requireNonEmpty(value, " value");
+      if (!isValidKeySize(name) || !isValidValueSize(value)) {
+        return this;
+      }
       List<String> nv = nameValues;
       for (int i = nv.size() - 2; i >= 0; i -= 2) {
         if (name.equals(nv.get(i)) && value.equals(nv.get(i + 1))) {
-          nv.remove(i + 1);
-          nv.remove(i);
+          String removedValue = nv.remove(i + 1);
+          String removedName = nv.remove(i);
+          if (removedValue != null) {
+            serializedSize -= Rpc.ProtoMetadata.serializedSize(removedValue);
+          }
+          if (removedName != null) {
+            serializedSize -= Rpc.ProtoMetadata.serializedSize(removedName);
+          }
         }
       }
       return this;
     }
 
     public Headers build() {
-      return new Headers(isDefaultService, nameValues);
+      return new Headers(isDefaultService, nameValues, serializedSize);
     }
   }
 
@@ -256,41 +290,99 @@ public final class Headers {
     return seq;
   }
 
-  private static List<String> requireValid(List<String> keyValues, String message) {
+  private static int requireValid(List<String> keyValues, String message) {
     Objects.requireNonNull(keyValues, "keyValues");
-    int size = keyValues.size();
-    if (size % 2 != 0) {
+    int length = keyValues.size();
+    if (length % 2 != 0) {
       throw new IllegalArgumentException(message + " size must be even");
     }
-    for (int i = 0; i < size; i++) {
+    int size = 0;
+    for (int i = 0; i < length; i++) {
       String kv = keyValues.get(i);
       if (kv == null) {
         throw new IllegalArgumentException(message + " elements must be non-null");
       }
       boolean isKey = i % 2 == 0;
-      if (isKey && kv.isEmpty()) {
+      int kvl = kv.length();
+      if (isKey && kvl == 0) {
         throw new IllegalArgumentException(message + " keys must be non-empty");
       }
+      if (kvl > HEADER_LENGTH_MAX) {
+        throw new IllegalArgumentException(
+            "header length " + kvl + " exceeds " + HEADER_LENGTH_MAX);
+      }
+      size += Rpc.ProtoMetadata.serializedSize(kv);
     }
-    return keyValues;
+    return size;
   }
 
-  private static String[] requireValid(String[] keyValues, String message) {
+  private static int requireValid(String[] keyValues, String message) {
     Objects.requireNonNull(keyValues, "keyValues");
     int length = keyValues.length;
     if (length % 2 != 0) {
       throw new IllegalArgumentException(message + " size must be even");
     }
+    int size = 0;
     for (int i = 0; i < length; i++) {
       String kv = keyValues[i];
       if (kv == null) {
         throw new IllegalArgumentException(message + " elements must be non-null");
       }
       boolean isKey = i % 2 == 0;
-      if (isKey && kv.isEmpty()) {
+      int l = kv.length();
+      if (isKey && l == 0) {
         throw new IllegalArgumentException(message + " keys must be non-empty");
       }
+      if (l > HEADER_LENGTH_MAX) {
+        throw new IllegalArgumentException("header length " + l + " exceeds " + HEADER_LENGTH_MAX);
+      }
+      size += Rpc.ProtoMetadata.serializedSize(kv);
     }
-    return keyValues;
+    return size;
+  }
+
+  private static String requireValidKeySize(String key, String message) {
+    Objects.requireNonNull(key, message);
+
+    int length = key.length();
+    if (length == 0) {
+      throw new IllegalArgumentException(message + " is empty");
+    }
+    if (length > HEADER_LENGTH_MAX) {
+      throw new IllegalArgumentException(message + " size exceeds " + HEADER_LENGTH_MAX);
+    }
+    return key;
+  }
+
+  private static String requireValidValueSize(String value, String message) {
+    Objects.requireNonNull(value, message);
+
+    int length = value.length();
+    if (length > HEADER_LENGTH_MAX) {
+      throw new IllegalArgumentException(message + " size exceeds " + HEADER_LENGTH_MAX);
+    }
+    return value;
+  }
+
+  private static boolean isValidKeySize(@Nullable String key) {
+    if (key == null) {
+      return false;
+    }
+    int length = key.length();
+    if (length == 0 || length > HEADER_LENGTH_MAX) {
+      return false;
+    }
+    return true;
+  }
+
+  private static boolean isValidValueSize(@Nullable String value) {
+    if (value == null) {
+      return false;
+    }
+    int length = value.length();
+    if (length > HEADER_LENGTH_MAX) {
+      return false;
+    }
+    return true;
   }
 }
