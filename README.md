@@ -95,8 +95,8 @@ and Http2 streams based transports for interop:
 
 ## Build
 
-Building `jauntsdn/RSocket-jvm` requires java20 for virtual threads API, java11+ for smallrye-mutiny; 
-futures / grpc-stubs / rxjava / reactor are java8+. 
+Building `jauntsdn/RSocket-jvm` requires java20 if virtual threads modules are included (-Pvirtualthreads -Ptoolchains), java11 otherwise.
+
 ```
 ./gradlew
 ```
@@ -108,7 +108,7 @@ Building & installing artifacts into local maven repository
 
 ## Binaries
 
-Binary releases are published on Maven Central for virtual threads, futures (CompletableFuture), grpc stubs, reactor, rxjava & mutiny libraries.
+Binary releases are published on Maven Central for virtualthreads, futures (CompletableFuture), grpc (stubs), reactor, rxjava & mutiny libraries.
 
 ```groovy
 
