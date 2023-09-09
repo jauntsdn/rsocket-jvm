@@ -91,6 +91,8 @@ and Http2 streams based transports for interop:
 
 [messagestreams-grpc-examples](https://github.com/jauntsdn/messagestreams-grpc-examples) demonstrate GRPC-stub StreamObserver based services.
 
+[messagestreams-virtualthreads-examples](https://github.com/jauntsdn/messagestreams-virtualthreads-examples) demonstrate jdk virtual threads based services.
+
 [messagestreams-futures-examples](https://github.com/jauntsdn/messagestreams-futures-examples) demonstrate jdk CompletableFuture based services.
 
 ## Build
