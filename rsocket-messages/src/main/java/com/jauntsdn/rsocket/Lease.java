@@ -41,6 +41,11 @@ public final class Lease {
       return 2;
     }
 
+    /**
+     * @param allowedFnfRequests number of allowed fire-and-forget calls in addition to provided by
+     *     lease itself.
+     * @return this Metadata instance
+     */
     public Metadata allowedFnfRequests(int allowedFnfRequests) {
       requirePositive(allowedFnfRequests, "allowedFnfRequests");
       this.allowedFnfRequests = allowedFnfRequests;
@@ -117,6 +122,7 @@ public final class Lease {
     }
   }
 
+  /** Used to provide request leases to remote peer */
   public interface Controller {
 
     default void allow(int timeToLiveMillis, int allowedRequests, int rank) {
@@ -129,12 +135,15 @@ public final class Lease {
 
     void allow(int timeToLiveMillis, int allowedRequests, int rank, @Nullable Metadata metadata);
 
+    /** @return Eventloop executor */
     ScheduledExecutorService executor();
 
     Future<Void> onClose();
 
+    /** @return true if associated channel is created as eventloop only, false otherwise */
     boolean isEventLoopOnly();
 
+    /** @return expected keep-alive interval */
     int rttIntervalMillis();
   }
 

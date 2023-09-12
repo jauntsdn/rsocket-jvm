@@ -20,6 +20,7 @@ import io.netty.buffer.ByteBuf;
 import io.netty.util.AbstractReferenceCounted;
 import javax.annotation.Nullable;
 
+/** Reference-counted message containing binary data and optionally binary metadata */
 public abstract class Message extends AbstractReferenceCounted {
 
   Message() {}

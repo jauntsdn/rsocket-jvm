@@ -29,7 +29,7 @@ import javax.annotation.Nullable;
 
 /**
  * RPC metadata headers: list of ASCII key-value pairs, both key and value are limited to 8192
- * characters, values are allowed to be empty.
+ * characters, values are allowed to be empty. Intended for use with Protobuf encoded RPC metadata.
  */
 public final class Headers {
   public static int HEADER_LENGTH_MAX = 8192;

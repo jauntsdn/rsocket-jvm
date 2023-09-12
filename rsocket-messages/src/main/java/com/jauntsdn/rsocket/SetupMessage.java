@@ -20,6 +20,7 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.util.ReferenceCounted;
 
+/** Channel setup {@link Message} with data & metadata MIME types. */
 public abstract class SetupMessage implements ReferenceCounted {
   SetupMessage() {}
 
