@@ -21,10 +21,23 @@ import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.function.Function;
 
+/**
+ * Models RSocket interactions as described in
+ * https://github.com/rsocket/rsocket/blob/master/Protocol.md#stream-sequences-and-lifetimes
+ */
 public interface RSocket extends MessageStreams, Availability {
 
+  /**
+   * Enables metadata exchange between connection endpoints.
+   *
+   * @param message containing connection metadata.
+   */
   CompletionStage<Void> metadataPush(Message message);
 
+  /**
+   * @return lightweight {@link ScheduledExecutorService} intended for non-fine-grained tasks
+   *     scheduling (e.g. timeouts).
+   */
   default Optional<ScheduledExecutorService> coarseScheduler() {
     return Optional.empty();
   }

@@ -31,6 +31,7 @@ import java.util.function.Consumer;
 import javax.annotation.Nullable;
 import org.reactivestreams.Publisher;
 
+/** Utility for serving multiple {@link RpcService} from single {@link MessageStreams} endpoint. */
 public final class RpcHandler implements MessageStreamsHandler {
   private static final String NO_DEFAULT_ZERO_SERVICES_MESSAGE =
       "RpcHandler: no default service because 0 services registered";

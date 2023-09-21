@@ -17,14 +17,28 @@
 package com.jauntsdn.rsocket;
 
 import java.util.Optional;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.function.Function;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Scheduler;
 
+/**
+ * Models RSocket interactions as described in
+ * https://github.com/rsocket/rsocket/blob/master/Protocol.md#stream-sequences-and-lifetimes
+ */
 public interface RSocket extends MessageStreams, Availability {
 
+  /**
+   * Enables metadata exchange between connection endpoints.
+   *
+   * @param message containing connection metadata.
+   */
   Mono<Void> metadataPush(Message message);
 
+  /**
+   * @return lightweight {@link ScheduledExecutorService} intended for non-fine-grained tasks
+   *     scheduling (e.g. timeouts).
+   */
   default Optional<Scheduler> coarseScheduler() {
     return Optional.empty();
   }
