@@ -49,6 +49,7 @@ GRPC clients can access such services without separate "gateway" binaries and ID
 **Non-intrusive**. [MessageStreams](https://github.com/jauntsdn/rsocket-jvm/blob/1.5.1/rsocket-reactor/src/main/java/com/jauntsdn/rsocket/MessageStreams.java) API & [RSocket-JVM](https://github.com/jauntsdn/rsocket-jvm/blob/1.5.1/rsocket-reactor/src/main/java/com/jauntsdn/rsocket/RSocket.java) runtime are clearly split so from end-user perspective there is 
 only set of streaming & non-streaming interactions on buffers/messages:
 
+**traditional streaming**
 ```groovy
   void requestResponse(Message message, StreamObserver<Message> responseObserver);
   void requestStream(Message message, StreamObserver<Message> responseObserver);
@@ -56,6 +57,7 @@ only set of streaming & non-streaming interactions on buffers/messages:
   void fireAndForget(Message message, StreamObserver<Message> responseObserver);
 ```
 
+**reactive streams**
 ```groovy
   Publisher<Message> requestResponse(Message message);
   Publisher<Message> requestStream(Message message);
