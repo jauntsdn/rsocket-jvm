@@ -16,13 +16,16 @@
 
 package com.jauntsdn.rsocket;
 
+import com.google.protobuf.CodedInputStream;
 import com.jauntsdn.rsocket.exceptions.ApplicationErrorException;
+import com.jauntsdn.rsocket.exceptions.SerializationException;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
 import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
 import io.netty.buffer.UnpooledByteBufAllocator;
 import io.netty.buffer.UnpooledHeapByteBuf;
+import java.io.IOException;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -31,6 +34,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
 public final class Rpc {
 
@@ -421,6 +426,61 @@ public final class Rpc {
         headers.add(metadata.readCharSequence(len, StandardCharsets.US_ASCII).toString());
       } while (remaining > 0);
       return Headers.create(headers);
+    }
+  }
+
+  /**
+   * Service descriptor used to transcode RPC / Protocol Buffers calls into another representation
+   * (e.g. http/json)
+   */
+  public static class ServiceDescriptor {
+    private final List<Call> serviceCalls;
+
+    public ServiceDescriptor(List<Call> serviceCalls) {
+      this.serviceCalls = Objects.requireNonNull(serviceCalls, "serviceCalls");
+    }
+
+    public final List<Call> serviceCalls() {
+      return serviceCalls;
+    }
+
+    public static class Call {
+      final String name;
+      final InboundMessageFactory inMessageFactory;
+      final OutboundMessageFactory outMessageFactory;
+
+      private Call(
+          String name,
+          InboundMessageFactory inMessageFactory,
+          OutboundMessageFactory outMessageFactory) {
+        this.name = Objects.requireNonNull(name, "name");
+        this.inMessageFactory = Objects.requireNonNull(inMessageFactory, "inMessageFactory");
+        this.outMessageFactory = Objects.requireNonNull(outMessageFactory, "outMessageFactory");
+      }
+
+      public static Call of(
+          String name,
+          InboundMessageFactory inMessageFactory,
+          OutboundMessageFactory outMessageFactory) {
+        return new Call(name, inMessageFactory, outMessageFactory);
+      }
+    }
+
+    public interface InboundMessageFactory extends Supplier<com.google.protobuf.Message.Builder> {}
+
+    public interface OutboundMessageFactory
+        extends Function<CodedInputStream, com.google.protobuf.Message> {
+
+      @Override
+      default com.google.protobuf.Message apply(CodedInputStream codedInputStream) {
+        try {
+          return create(codedInputStream);
+        } catch (IOException e) {
+          throw new SerializationException("Protobuf deserialization error", e);
+        }
+      }
+
+      com.google.protobuf.Message create(CodedInputStream codedInputStream) throws IOException;
     }
   }
 }

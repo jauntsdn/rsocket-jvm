@@ -10,6 +10,8 @@ plugins {
 
 dependencies {
     api "io.netty:netty-buffer"
+
+    compileOnly "com.google.protobuf:protobuf-java"
     compileOnly "com.google.code.findbugs:jsr305"
 }
 
