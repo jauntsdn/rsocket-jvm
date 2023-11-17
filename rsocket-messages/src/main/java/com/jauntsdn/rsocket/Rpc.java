@@ -444,6 +444,11 @@ public final class Rpc {
       return serviceCalls;
     }
 
+    @Override
+    public String toString() {
+      return "ServiceDescriptor{" + "serviceCalls=" + serviceCalls + '}';
+    }
+
     public static class Call {
       final String name;
       final InboundMessageFactory inMessageFactory;
@@ -453,16 +458,63 @@ public final class Rpc {
           String name,
           InboundMessageFactory inMessageFactory,
           OutboundMessageFactory outMessageFactory) {
-        this.name = Objects.requireNonNull(name, "name");
-        this.inMessageFactory = Objects.requireNonNull(inMessageFactory, "inMessageFactory");
-        this.outMessageFactory = Objects.requireNonNull(outMessageFactory, "outMessageFactory");
+        this.name = name;
+        this.inMessageFactory = inMessageFactory;
+        this.outMessageFactory = outMessageFactory;
+      }
+
+      @Override
+      public String toString() {
+        return "Call{" + "name='" + name + '\'' + '}';
+      }
+
+      @Override
+      public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Call call = (Call) o;
+
+        return name.equals(call.name);
+      }
+
+      @Override
+      public int hashCode() {
+        return name.hashCode();
       }
 
       public static Call of(
           String name,
           InboundMessageFactory inMessageFactory,
           OutboundMessageFactory outMessageFactory) {
+        Objects.requireNonNull(name, "name");
+        Objects.requireNonNull(inMessageFactory, "inMessageFactory");
+        Objects.requireNonNull(outMessageFactory, "outMessageFactory");
         return new Call(name, inMessageFactory, outMessageFactory);
+      }
+
+      public static Call of(
+          String service,
+          String method,
+          InboundMessageFactory inMessageFactory,
+          OutboundMessageFactory outMessageFactory) {
+        String name =
+            name(
+                Objects.requireNonNull(service, "service"),
+                Objects.requireNonNull(method, "method"));
+        Objects.requireNonNull(inMessageFactory, "inMessageFactory");
+        Objects.requireNonNull(outMessageFactory, "outMessageFactory");
+        return new Call(name, inMessageFactory, outMessageFactory);
+      }
+
+      @SuppressWarnings("all")
+      private static String name(String service, String method) {
+        return new StringBuilder(service.length() + method.length() + 2)
+            .append('/')
+            .append(service.toLowerCase())
+            .append('/')
+            .append(method.toLowerCase())
+            .toString();
       }
     }
 
