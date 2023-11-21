@@ -16,12 +16,19 @@
 
 package com.jauntsdn.rsocket;
 
+/**
+ * API to compare entities availability (higher is better). In channel/RSocket context value of 1.0
+ * corresponds to fully available, 0.0 to unavailable
+ */
 public interface Availability {
 
+  /** Represents availability of all interactions */
   double availability();
 
+  /** Represents availability of all interactions with rank equal or higher than given rank */
   double availability(int rank);
 
+  /** Represents availability of given interaction type with rank equal or higher than given rank */
   default double availability(Interaction interaction) {
     return availability(interaction.rank());
   }

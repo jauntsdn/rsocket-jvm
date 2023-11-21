@@ -19,6 +19,7 @@ package com.jauntsdn.rsocket;
 import com.jauntsdn.rsocket.exceptions.ChannelException;
 import javax.annotation.Nullable;
 
+/** API to convert channel/interaction level errors to application level errors */
 public final class Errors {
   private Errors() {}
 
@@ -55,11 +56,13 @@ public final class Errors {
 
     private Connection() {}
 
+    /** Converts channel outbound error code and message to application error message */
     public interface SendErrors {
 
       String translate(int errorCode, @Nullable String errorMessage);
     }
 
+    /** Converts channel inbound error code and message to application error */
     public interface ReceiveErrors {
 
       Exception translate(int errorCode, @Nullable String errorMessage);

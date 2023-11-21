@@ -23,6 +23,10 @@ import io.netty.buffer.UnpooledByteBufAllocator;
 import java.util.Objects;
 import java.util.function.Consumer;
 
+/**
+ * API to encode ByteBuf based remote call metadata, along with locally consumed RPC call metadata
+ * (e.g. encode call as default service call).
+ */
 public final class MessageMetadata {
   public static final int HEADER_SIZE = Long.BYTES;
 
@@ -43,28 +47,39 @@ public final class MessageMetadata {
     return MessageMetadataFlyweight.defaultService(header);
   }
 
+  /** Creates message metadata with given ByteBufAllocator */
   public static MessageMetadata allocator(ByteBufAllocator allocator) {
     return new MessageMetadata(allocator);
   }
 
+  /** Creates message metadata with default ByteBufAllocator */
   public static MessageMetadata defaultAllocator() {
     return new MessageMetadata(ByteBufAllocator.DEFAULT);
   }
 
+  /** Creates message metadata with heap ByteBufAllocator */
   public static MessageMetadata heapAllocator() {
     return new MessageMetadata(UnpooledHeapByteBufAllocator.DEFAULT);
   }
 
+  /**
+   * Configures call as default service call (applicable only if single RPC service is provided by
+   * remote endpoint)
+   */
   public MessageMetadata defaultService(boolean defaultService) {
     this.isDefaultService = defaultService;
     return this;
   }
 
+  /** Configures MessageMetadata with given byte buffer capacity for remote call(default is zero) */
   public MessageMetadata metadataSize(int size) {
     this.metadataSize = requirePositive(size, "size");
     return this;
   }
 
+  /**
+   * Writes MessageMetadata buffer having capacity up to provided with {@link #metadataSize(int)}
+   */
   public MessageMetadata metadata(Consumer<ByteBuf> metadataWriter) {
     this.metadataWriter = Objects.requireNonNull(metadataWriter, "metadataWriter");
     return this;

@@ -25,9 +25,19 @@ import io.netty.util.collection.IntCollections;
 import io.netty.util.collection.IntObjectHashMap;
 import io.netty.util.collection.IntObjectMap;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
+import java.util.NoSuchElementException;
+import java.util.Objects;
+import java.util.function.Consumer;
 import javax.annotation.Nullable;
 
+/**
+ * Encoder and decoder for headers metadata (list of ASCII key-value pairs) intended for use with
+ * ByteBuf based MessageMetadata API ({@link MessageMetadata#metadata(Consumer)}).
+ */
 public final class HeadersMetadata {
   static final int PREFIX_FLAGS_OFFSET = 3;
   static final int PREFIX_NAME_LENGTH_OFFSET = 2;
@@ -52,10 +62,12 @@ public final class HeadersMetadata {
 
   private HeadersMetadata() {}
 
+  /** Encodes headers metadata with {@link ByteBufAllocator#DEFAULT} allocator */
   public static ByteBuf encode(List<? extends CharSequence> headerNameValue) {
     return encode(ByteBufAllocator.DEFAULT, headerNameValue);
   }
 
+  /** Encodes headers metadata with provided ByteBufAllocator */
   public static ByteBuf encode(
       ByteBufAllocator allocator, List<? extends CharSequence> headerNameValues) {
     Objects.requireNonNull(headerNameValues, "headerNameValues");
@@ -68,6 +80,7 @@ public final class HeadersMetadata {
     return encodeHeaders(buffer, headerNameValues);
   }
 
+  /** Encodes headers metadata into provided byte buffer */
   public static ByteBuf encode(ByteBuf buffer, List<? extends CharSequence> headerNameValues) {
     Objects.requireNonNull(headerNameValues, "headerNameValues");
     Objects.requireNonNull(buffer, "buffer");
@@ -81,6 +94,7 @@ public final class HeadersMetadata {
     return encodeHeaders(buffer, headerNameValues);
   }
 
+  /** @return size (bytes) required to encode provided headers metadata */
   public static int sizeOf(List<? extends CharSequence> headerNameValues) {
     Objects.requireNonNull(headerNameValues, "headerNameValues");
     int nameValuesCount = headerNameValues.size();
@@ -118,10 +132,12 @@ public final class HeadersMetadata {
     return (int) size;
   }
 
+  /** Decode byte buffer as string key-values of headers metadata */
   public static Iterator<String> decode(ByteBuf metadata) {
     return decode(metadata, Projection.ALL);
   }
 
+  /** Decode byte buffer as string key-values of headers metadata for keys provided by projection */
   public static Iterator<String> decode(ByteBuf metadata, Projection projection) {
     int prefix = metadata.getInt(metadata.readerIndex());
     int flags = prefix >> (PREFIX_FLAGS_OFFSET * 8);
@@ -131,10 +147,15 @@ public final class HeadersMetadata {
     return Collections.emptyIterator();
   }
 
+  /** Decode byte buffer as AsciiString key-values of headers metadata */
   public static Iterator<AsciiString> decodeAscii(ByteBuf metadata) {
     return decodeAscii(metadata, Projection.ALL);
   }
 
+  /**
+   * Decode byte buffer as AsciiString key-values of headers metadata for keys provided by
+   * projection
+   */
   public static Iterator<AsciiString> decodeAscii(ByteBuf metadata, Projection projection) {
     int prefix = metadata.getInt(metadata.readerIndex());
     int flags = prefix >> (PREFIX_FLAGS_OFFSET * 8);
