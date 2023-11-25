@@ -498,23 +498,11 @@ public final class Rpc {
           String method,
           InboundMessageFactory inMessageFactory,
           OutboundMessageFactory outMessageFactory) {
-        String name =
-            name(
-                Objects.requireNonNull(service, "service"),
-                Objects.requireNonNull(method, "method"));
+        Objects.requireNonNull(service, "service");
+        Objects.requireNonNull(method, "method");
         Objects.requireNonNull(inMessageFactory, "inMessageFactory");
         Objects.requireNonNull(outMessageFactory, "outMessageFactory");
-        return new Call(name, inMessageFactory, outMessageFactory);
-      }
-
-      @SuppressWarnings("all")
-      private static String name(String service, String method) {
-        return new StringBuilder(service.length() + method.length() + 2)
-            .append('/')
-            .append(service.toLowerCase())
-            .append('/')
-            .append(method.toLowerCase())
-            .toString();
+        return new Call('/' + service + '/' + method, inMessageFactory, outMessageFactory);
       }
     }
 
