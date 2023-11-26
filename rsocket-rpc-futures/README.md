@@ -10,3 +10,5 @@
 
 `typed-metadata` if present, generated stubs will contain metadata as Protocol Buffers defined in [rsocket-rpc-metadata-idl](https://github.com/jauntsdn/rsocket-jvm/tree/develop/rsocket-rpc-metadata-idl) instead of raw byte buffers; one of `internal` (default),
 `external` (depends on `rsocket-rpc-metadata-idl`). Disabled by default (metadata is represented as raw byte buffers).
+
+`generate-service-descriptors` if present, generated server stubs will contain service descriptors for transcoding Protocol Buffers into another representation (e.g. http/json).  Value format is "service_foo.proto;service_bar.proto", or empty to generate for all services. 
