@@ -81,11 +81,15 @@ Currently comprised of
 
 * `TCP`, `UNIX domain sockets` & `VM sockets` - known efficient byte stream protocols for datacenter / inter-process communication;
 
-and Http2 streams based transports for interop:
+and Http/Http2 based transports for interop:
 
 * `GRPC-RSocket-RPC` for communication with internet clients / external services;
 
-* `WebSocket` & `Websocket-over-http2` for cross-cloud communication with Internet Standards transport.
+* `WebSocket` & `Websocket-over-http2` for cross-cloud communication with Internet Standards transport;
+
+* `Http/json` to expose auxiliary/control APIs as http endpoint;
+
+* `multiprotocol` transport to serve any combination of above over same port.
 
 ### Examples
 
