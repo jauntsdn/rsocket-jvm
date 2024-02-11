@@ -31,10 +31,10 @@ public interface MessageStreams extends Closeable {
    * Unreliable and unordered 1 to 0 messages exchange interaction.
    *
    * @return {@link Completable} completed successfully as soon as message is scheduled for write if
-   *     channel is connected, or completed with error if channel is disconnected. {@link Mono}
-   *     completion does not imply that message was written on wire; messages ordering between
-   *     several fire-and-forget interactions, or fire-and-forget and other interactions is not
-   *     guaranteed.
+   *     channel is connected, or completed with error if channel is disconnected. {@link
+   *     Completable} completion does not imply that message was written on wire; messages ordering
+   *     between several fire-and-forget interactions, or fire-and-forget and other interactions is
+   *     not guaranteed.
    */
   Completable fireAndForget(Message message);
 

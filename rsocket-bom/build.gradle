@@ -27,6 +27,7 @@ dependencies {
         api "io.smallrye.reactive:mutiny:${mutinyVersion}"
         api "com.google.protobuf:protobuf-java:${protobufVersion}"
         api "com.google.protobuf:protobuf-javalite:${protobufVersion}"
+        api "com.google.protobuf:protobuf-java-util:${protobufVersion}"
         api "javax.inject:javax.inject:${javaxInjectVersion}"
         api "javax.annotation:javax.annotation-api:${javaxAnnotationVersion}"
         api "jakarta.inject:jakarta.inject-api:${jakartaInjectVersion}"

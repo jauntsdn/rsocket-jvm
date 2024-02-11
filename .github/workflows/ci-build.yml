@@ -25,7 +25,7 @@ jobs:
         uses: actions/setup-java@v3
         with:
           java-version: ${{ matrix.jdk }}
-          distribution: 'zulu'
+          distribution: 'temurin'
       - name: Cache Gradle packages
         uses: actions/cache@v3
         with:
