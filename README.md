@@ -46,7 +46,7 @@ Project supports 3 kinds of APIs:
 **GRPC compatible**. All implementations are directly compatible with GRPC via MessageStreams-RPC & GRPC transport.
 GRPC clients can access such services without separate "gateway" binaries and IDL sharing schemes.
  
-**Non-intrusive**. [MessageStreams](https://github.com/jauntsdn/rsocket-jvm/blob/1.5.2/rsocket-reactor/src/main/java/com/jauntsdn/rsocket/MessageStreams.java) API & [RSocket-JVM](https://github.com/jauntsdn/rsocket-jvm/blob/1.5.2/rsocket-reactor/src/main/java/com/jauntsdn/rsocket/RSocket.java) runtime are clearly split so from end-user perspective there is 
+**Non-intrusive**. [MessageStreams](https://github.com/jauntsdn/rsocket-jvm/blob/1.5.3/rsocket-reactor/src/main/java/com/jauntsdn/rsocket/MessageStreams.java) API & [RSocket-JVM](https://github.com/jauntsdn/rsocket-jvm/blob/1.5.3/rsocket-reactor/src/main/java/com/jauntsdn/rsocket/RSocket.java) runtime are clearly split so from end-user perspective there is 
 only set of streaming & non-streaming interactions on buffers/messages:
 
 **traditional streaming**
@@ -125,10 +125,10 @@ repositories {
 }
 
 dependencies {
-    implementation "com.jauntsdn.rsocket:rsocket-messages:1.5.2"
-    implementation "com.jauntsdn.rsocket:rsocket-rpc-idl:1.5.2"
-    implementation "com.jauntsdn.rsocket:rsocket-<VENDOR>:1.5.2"
-    implementation "com.jauntsdn.rsocket:rsocket-rpc-<VENDOR>:1.5.2"
+    implementation "com.jauntsdn.rsocket:rsocket-messages:1.5.3"
+    implementation "com.jauntsdn.rsocket:rsocket-rpc-idl:1.5.3"
+    implementation "com.jauntsdn.rsocket:rsocket-<VENDOR>:1.5.3"
+    implementation "com.jauntsdn.rsocket:rsocket-rpc-<VENDOR>:1.5.3"
 }
 ```
 
@@ -137,7 +137,7 @@ MessageStreams-RPC compiler binaries are linux, windows(x86) only
 protobuf {
      plugins {
           rsocketRpc {
-              artifact = "com.jauntsdn.rsocket:rsocket-rpc-<VENDOR>-compiler:1.5.2"
+              artifact = "com.jauntsdn.rsocket:rsocket-rpc-<VENDOR>-compiler:1.5.3"
           }
      }
 }
