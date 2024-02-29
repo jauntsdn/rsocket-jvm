@@ -1,6 +1,6 @@
 # This is a Gradle generated file for dependency locking.
 # Manual edits can break the build and are not advised.
 # This file is expected to be part of source control.
-io.netty:netty-bom:4.1.106.Final=classpath
-io.projectreactor:reactor-bom:2023.0.2=classpath
+io.netty:netty-bom:4.1.107.Final=classpath
+io.projectreactor:reactor-bom:2023.0.3=classpath
 empty=
