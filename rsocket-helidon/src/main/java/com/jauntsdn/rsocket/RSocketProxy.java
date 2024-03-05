@@ -23,6 +23,8 @@ import java.util.Optional;
 import java.util.concurrent.Flow;
 import java.util.concurrent.ScheduledExecutorService;
 
+/** Deprecated for removal since helidon-common-reactive project seems inactive/abandoned. */
+@Deprecated
 public class RSocketProxy implements RSocket, RSocketHandler {
   protected final MessageStreams source;
 

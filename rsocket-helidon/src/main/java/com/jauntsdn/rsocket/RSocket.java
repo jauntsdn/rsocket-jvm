@@ -22,9 +22,12 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.function.Function;
 
 /**
- * Models RSocket interactions as described in
+ * Deprecated for removal since helidon-common-reactive project seems inactive/abandoned.
+ *
+ * <p>Models RSocket interactions as described in
  * https://github.com/rsocket/rsocket/blob/master/Protocol.md#stream-sequences-and-lifetimes
  */
+@Deprecated
 public interface RSocket extends MessageStreams, Availability {
 
   /**

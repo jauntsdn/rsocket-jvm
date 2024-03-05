@@ -18,6 +18,8 @@ package com.jauntsdn.rsocket;
 
 import io.helidon.common.reactive.Single;
 
+/** Deprecated for removal since helidon-common-reactive project seems inactive/abandoned. */
+@Deprecated
 public interface Closeable extends GracefulCloseable {
 
   Single<Void> onClose();

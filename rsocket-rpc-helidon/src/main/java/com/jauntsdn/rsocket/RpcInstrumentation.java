@@ -20,6 +20,8 @@ import io.helidon.common.reactive.Single;
 import java.util.concurrent.Flow;
 import java.util.function.Function;
 
+/** Deprecated for removal since helidon-common-reactive project seems inactive/abandoned. */
+@Deprecated
 public interface RpcInstrumentation {
 
   <T> Function<? super Flow.Publisher<T>, ? extends Flow.Publisher<T>> instrumentMulti(

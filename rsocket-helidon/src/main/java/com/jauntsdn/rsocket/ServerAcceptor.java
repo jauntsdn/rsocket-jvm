@@ -19,6 +19,8 @@ package com.jauntsdn.rsocket;
 import io.helidon.common.reactive.Single;
 import java.util.function.Function;
 
+/** Deprecated for removal since helidon-common-reactive project seems to be inactive/abandoned. */
+@Deprecated
 public interface ServerAcceptor {
 
   Single<RSocket> accept(SetupMessage setup, RSocket requesterRSocket);
