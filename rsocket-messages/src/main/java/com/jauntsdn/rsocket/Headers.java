@@ -34,22 +34,29 @@ import javax.annotation.Nullable;
 public final class Headers {
   public static int HEADER_LENGTH_MAX = 8192;
 
-  private static final Headers EMPTY = new Headers(false, Collections.emptyList(), 0);
-  private static final Headers DEFAULT_SERVICE = new Headers(true, Collections.emptyList(), 0);
+  private static final Headers EMPTY = new Headers(false, 0, Collections.emptyList(), 0);
+  private static final Headers DEFAULT_SERVICE = new Headers(true, 0, Collections.emptyList(), 0);
 
   private final boolean isDefaultService;
   private final int serializedSize;
+  private final long timeoutMillis;
   private final List<String> keyValues;
   private volatile ByteBuf cache;
 
-  private Headers(boolean isDefaultService, List<String> keyValues, int serializedSize) {
+  private Headers(
+      boolean isDefaultService, long timeoutMillis, List<String> keyValues, int serializedSize) {
     this.isDefaultService = isDefaultService;
+    this.timeoutMillis = timeoutMillis;
     this.keyValues = keyValues;
     this.serializedSize = serializedSize;
   }
 
   public boolean isDefaultService() {
     return isDefaultService;
+  }
+
+  public long timeoutMillis() {
+    return timeoutMillis;
   }
 
   public String header(String name) {
@@ -155,7 +162,7 @@ public final class Headers {
     if (headers.length == 0) {
       return isDefaultService ? DEFAULT_SERVICE : EMPTY;
     }
-    return new Headers(isDefaultService, Arrays.asList(headers), serializedSize);
+    return new Headers(isDefaultService, 0, Arrays.asList(headers), serializedSize);
   }
 
   public static Headers empty() {
@@ -164,6 +171,14 @@ public final class Headers {
 
   public static Headers withDefaultService() {
     return DEFAULT_SERVICE;
+  }
+
+  public static Headers withTimeout(long timeoutMillis) {
+    requireNonNegative(timeoutMillis, "timeoutMillis");
+    if (timeoutMillis == 0) {
+      return EMPTY;
+    }
+    return new Headers(false, timeoutMillis, Collections.emptyList(), 0);
   }
 
   public static Headers.Builder newBuilder() {
@@ -179,7 +194,7 @@ public final class Headers {
     if (headers.isEmpty()) {
       return EMPTY;
     }
-    return new Headers(false, headers, serializedSize);
+    return new Headers(false, 0, headers, serializedSize);
   }
 
   ByteBuf cache() {
@@ -203,6 +218,7 @@ public final class Headers {
   public static final class Builder {
     private final List<String> nameValues;
     private boolean isDefaultService;
+    private long timeoutMillis;
     private int serializedSize;
 
     private Builder(int size, List<String> headers) {
@@ -222,6 +238,11 @@ public final class Headers {
 
     public Builder defaultService(boolean isDefaultService) {
       this.isDefaultService = isDefaultService;
+      return this;
+    }
+
+    public Builder timeout(long timeoutMillis) {
+      this.timeoutMillis = requireNonNegative(timeoutMillis, "timeoutMillis");
       return this;
     }
 
@@ -278,7 +299,7 @@ public final class Headers {
     }
 
     public Headers build() {
-      return new Headers(isDefaultService, nameValues, serializedSize);
+      return new Headers(isDefaultService, timeoutMillis, nameValues, serializedSize);
     }
   }
 
@@ -314,6 +335,13 @@ public final class Headers {
       size += Rpc.ProtoMetadata.serializedSize(kv);
     }
     return size;
+  }
+
+  private static long requireNonNegative(long value, String message) {
+    if (value < 0) {
+      throw new IllegalArgumentException(message + " must be non-negative");
+    }
+    return value;
   }
 
   private static int requireValid(String[] keyValues, String message) {
