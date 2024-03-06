@@ -19,6 +19,8 @@ package com.jauntsdn.rsocket;
 import io.helidon.common.reactive.Multi;
 import java.util.concurrent.Flow;
 
+/** Deprecated for removal since helidon-common-reactive project seems inactive/abandoned. */
+@Deprecated
 public interface MessageStreamsHandler extends MessageStreams {
 
   default Multi<Message> requestChannel(Message message, Flow.Publisher<Message> messages) {

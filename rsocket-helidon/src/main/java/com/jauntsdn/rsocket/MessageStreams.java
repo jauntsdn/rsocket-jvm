@@ -23,7 +23,12 @@ import java.util.Optional;
 import java.util.concurrent.Flow;
 import java.util.concurrent.ScheduledExecutorService;
 
-/** Channel interactions for async exchange of binary messages using Helidon-common-reactive API. */
+/**
+ * Deprecated for removal since helidon-common-reactive project seems inactive/abandoned.
+ *
+ * <p>Channel interactions for async exchange of binary messages using Helidon-common-reactive API.
+ */
+@Deprecated
 public interface MessageStreams extends Closeable {
 
   /**
