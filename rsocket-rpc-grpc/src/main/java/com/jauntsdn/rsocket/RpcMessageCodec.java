@@ -20,6 +20,10 @@ import io.grpc.stub.ClientCallStreamObserver;
 import io.grpc.stub.ClientResponseObserver;
 import io.grpc.stub.ServerCallStreamObserver;
 import io.grpc.stub.StreamObserver;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.function.Function;
 import javax.annotation.Nullable;
 
@@ -255,6 +259,25 @@ public final class RpcMessageCodec {
         return new RequestResponseObserver<>(observer, decoder, instrumentationListener);
       }
 
+      public static <ReqT, RespT> StreamObserver<Message> decode(
+          StreamObserver<RespT> observer,
+          Function<Message, RespT> decoder,
+          @Nullable RpcInstrumentation.Listener<RespT> instrumentationListener,
+          @Nullable ScheduledExecutorService scheduler,
+          long timeoutMillis) {
+        if (observer instanceof ClientResponseObserver) {
+          ClientResponseObserver<ReqT, RespT> clientResponseObserver =
+              (ClientResponseObserver<ReqT, RespT>) observer;
+          if (timeoutMillis <= 0 || scheduler == null) {
+            return new RequestResponseCancellableObserver<>(
+                clientResponseObserver, decoder, instrumentationListener);
+          }
+          return new RequestResponseTimeoutObserver<>(
+              clientResponseObserver, decoder, instrumentationListener, scheduler, timeoutMillis);
+        }
+        return new RequestResponseObserver<>(observer, decoder, instrumentationListener);
+      }
+
       static class RequestResponseObserver<RespT> implements StreamObserver<Message> {
         final StreamObserver<RespT> observer;
         final Function<Message, RespT> decoder;
@@ -297,6 +320,128 @@ public final class RpcMessageCodec {
           RpcInstrumentation.Listener<RespT> l = instrumentationListener;
           if (l != null) {
             l.onComplete();
+          }
+        }
+      }
+
+      static final class RequestResponseTimeoutObserver<ReqT, RespT>
+          extends RequestResponseObserver<RespT>
+          implements ClientResponseObserver<Message, Message> {
+        final long timeoutMillis;
+        final ScheduledExecutorService scheduler;
+        volatile ScheduledFuture<?> timeoutHandle;
+        boolean timeoutCancelled;
+
+        RequestResponseTimeoutObserver(
+            ClientResponseObserver<ReqT, RespT> observer,
+            Function<Message, RespT> decoder,
+            @Nullable RpcInstrumentation.Listener<RespT> instrumentationListener,
+            ScheduledExecutorService scheduler,
+            long timeoutMillis) {
+          super(observer, decoder, instrumentationListener);
+          this.scheduler = scheduler;
+          this.timeoutMillis = timeoutMillis;
+        }
+
+        @Override
+        public void beforeStart(ClientCallStreamObserver<Message> requestStream) {
+          timeoutHandle =
+              scheduler.schedule(
+                  () -> {
+                    timeoutCancelled = true;
+                    TimeoutException e =
+                        new TimeoutException("timed out after " + timeoutMillis + " millis");
+                    requestStream.cancel(null, e);
+                    onError(e);
+                  },
+                  timeoutMillis,
+                  TimeUnit.MILLISECONDS);
+
+          ((ClientResponseObserver<ReqT, RespT>) observer)
+              .beforeStart(
+                  new ClientCallStreamObserver<ReqT>() {
+                    @Override
+                    public void cancel(@Nullable String message, @Nullable Throwable cause) {
+                      RpcInstrumentation.Listener<?> l = instrumentationListener;
+                      if (l != null) {
+                        l.onCancel();
+                      }
+                      requestStream.cancel(message, cause);
+                      cancelTimeout();
+                    }
+
+                    @Override
+                    public boolean isReady() {
+                      return requestStream.isReady();
+                    }
+
+                    @Override
+                    public void setOnReadyHandler(Runnable onReadyHandler) {
+                      requestStream.setOnReadyHandler(onReadyHandler);
+                    }
+
+                    @Override
+                    public void request(int count) {
+                      requestStream.request(count);
+                    }
+
+                    @Override
+                    public void setMessageCompression(boolean enable) {
+                      requestStream.setMessageCompression(enable);
+                    }
+
+                    @Override
+                    public void disableAutoInboundFlowControl() {
+                      requestStream.disableAutoInboundFlowControl();
+                    }
+
+                    @Override
+                    public void disableAutoRequestWithInitial(int request) {
+                      requestStream.disableAutoRequestWithInitial(request);
+                    }
+
+                    @Override
+                    public void onNext(ReqT value) {
+                      /*protobuf is not refcounted - ignore*/
+                    }
+
+                    @Override
+                    public void onError(Throwable t) {
+                      requestStream.onError(t);
+                    }
+
+                    @Override
+                    public void onCompleted() {
+                      requestStream.onCompleted();
+                    }
+                  });
+        }
+
+        @Override
+        public void onNext(Message message) {
+          cancelTimeout();
+          super.onNext(message);
+        }
+
+        @Override
+        public void onError(Throwable t) {
+          cancelTimeout();
+          super.onError(t);
+        }
+
+        @Override
+        public void onCompleted() {
+          cancelTimeout();
+          super.onCompleted();
+        }
+
+        void cancelTimeout() {
+          if (!timeoutCancelled) {
+            timeoutCancelled = true;
+            ScheduledFuture<?> h = timeoutHandle;
+            if (h != null) {
+              h.cancel(true);
+            }
           }
         }
       }
@@ -397,6 +542,32 @@ public final class RpcMessageCodec {
         return new RequestChannelObserver<>(observer, decoder, instrumentationListener);
       }
 
+      public static <ReqT, RespT> StreamObserver<Message> decode(
+          StreamObserver<RespT> observer,
+          Encoder<ReqT> encoder,
+          Function<Message, RespT> decoder,
+          @Nullable RpcInstrumentation.Listener<RespT> instrumentationListener,
+          @Nullable ScheduledExecutorService scheduler,
+          long timeoutMillis) {
+        if (observer instanceof ClientResponseObserver) {
+          if (timeoutMillis <= 0 || scheduler == null) {
+            return new RequestChannelEncoderObserver<>(
+                (ClientResponseObserver<ReqT, RespT>) observer,
+                encoder,
+                decoder,
+                instrumentationListener);
+          }
+          return new RequestChannelTimeoutObserver<>(
+              (ClientResponseObserver<ReqT, RespT>) observer,
+              encoder,
+              decoder,
+              instrumentationListener,
+              scheduler,
+              timeoutMillis);
+        }
+        return new RequestChannelObserver<>(observer, decoder, instrumentationListener);
+      }
+
       static class RequestChannelObserver<RespT> implements StreamObserver<Message> {
         final StreamObserver<RespT> observer;
         final Function<Message, RespT> decoder;
@@ -460,7 +631,76 @@ public final class RpcMessageCodec {
         @Override
         public void beforeStart(ClientCallStreamObserver<Message> requestStream) {
           ((ClientResponseObserver<ReqT, RespT>) observer)
-              .beforeStart(encoder.encodeStream(requestStream));
+              .beforeStart(encoder.encodeStream(requestStream, null));
+        }
+      }
+
+      static final class RequestChannelTimeoutObserver<ReqT, RespT>
+          extends RequestChannelObserver<RespT>
+          implements ClientResponseObserver<Message, Message> {
+        final Encoder<ReqT> encoder;
+        final ScheduledExecutorService scheduler;
+        final long timeoutMillis;
+        volatile ScheduledFuture<?> timeoutHandle;
+        boolean timeoutCancelled;
+
+        RequestChannelTimeoutObserver(
+            ClientResponseObserver<ReqT, RespT> observer,
+            Encoder<ReqT> encoder,
+            Function<Message, RespT> decoder,
+            @Nullable RpcInstrumentation.Listener<RespT> instrumentationListener,
+            ScheduledExecutorService scheduler,
+            long timeoutMillis) {
+          super(observer, decoder, instrumentationListener);
+          this.encoder = encoder;
+          this.scheduler = scheduler;
+          this.timeoutMillis = timeoutMillis;
+        }
+
+        @Override
+        public void beforeStart(ClientCallStreamObserver<Message> requestStream) {
+          ScheduledFuture<?> h =
+              timeoutHandle =
+                  scheduler.schedule(
+                      () -> {
+                        timeoutCancelled = true;
+                        TimeoutException e =
+                            new TimeoutException("timed out after " + timeoutMillis + " millis");
+                        requestStream.cancel(null, e);
+                        onError(e);
+                      },
+                      timeoutMillis,
+                      TimeUnit.MILLISECONDS);
+          ((ClientResponseObserver<ReqT, RespT>) observer)
+              .beforeStart(encoder.encodeStream(requestStream, h));
+        }
+
+        @Override
+        public void onNext(Message message) {
+          cancelTimeout();
+          super.onNext(message);
+        }
+
+        @Override
+        public void onError(Throwable t) {
+          cancelTimeout();
+          super.onError(t);
+        }
+
+        @Override
+        public void onCompleted() {
+          cancelTimeout();
+          super.onCompleted();
+        }
+
+        void cancelTimeout() {
+          if (!timeoutCancelled) {
+            timeoutCancelled = true;
+            ScheduledFuture<?> h = timeoutHandle;
+            if (h != null) {
+              h.cancel(true);
+            }
+          }
         }
       }
 
@@ -474,6 +714,11 @@ public final class RpcMessageCodec {
         public abstract Message onNext(ReqT message);
 
         public ClientCallStreamObserver<ReqT> encodeStream(StreamObserver<Message> observer) {
+          return encodeStream(observer, null);
+        }
+
+        public ClientCallStreamObserver<ReqT> encodeStream(
+            StreamObserver<Message> observer, @Nullable ScheduledFuture<?> timeoutHandle) {
           if (!(observer instanceof ClientCallStreamObserver)) {
             throw new IllegalStateException(
                 "messageStream.requestChannel() returned value is not ClientCallStreamObserver");
@@ -487,6 +732,9 @@ public final class RpcMessageCodec {
               RpcInstrumentation.Listener<?> listener = instrumentationListener;
               if (listener != null) {
                 listener.onCancel();
+              }
+              if (timeoutHandle != null) {
+                timeoutHandle.cancel(true);
               }
               callObserver.cancel(message, cause);
             }
@@ -539,6 +787,14 @@ public final class RpcMessageCodec {
         }
       }
     }
+  }
+
+  public static ScheduledExecutorService timeoutScheduler(
+      MessageStreams messageStreams, long timeoutMillis) {
+    if (timeoutMillis <= 0) {
+      return null;
+    }
+    return messageStreams.scheduler().orElse(null);
   }
 
   abstract static class AbstractServerEncode<RespT> extends ServerCallStreamObserver<RespT> {
