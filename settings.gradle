@@ -23,8 +23,6 @@ include "rsocket-mutiny"
 include "rsocket-rpc-mutiny"
 include "rsocket-grpc"
 include "rsocket-rpc-grpc"
-include "rsocket-helidon"
-include "rsocket-rpc-helidon"
 include "rsocket-futures"
 include "rsocket-rpc-futures"
 if (includeVirtualThreads()) {
