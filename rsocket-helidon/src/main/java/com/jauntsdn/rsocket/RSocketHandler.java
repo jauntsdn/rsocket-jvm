@@ -16,4 +16,6 @@
 
 package com.jauntsdn.rsocket;
 
+/** Deprecated for removal since helidon-common-reactive project seems inactive/abandoned. */
+@Deprecated
 public interface RSocketHandler extends RSocket, MessageStreamsHandler {}

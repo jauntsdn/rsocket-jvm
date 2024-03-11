@@ -20,6 +20,8 @@ import io.helidon.common.reactive.Multi;
 import io.helidon.common.reactive.Single;
 import java.util.concurrent.Flow;
 
+/** Deprecated for removal since helidon-common-reactive project seems inactive/abandoned. */
+@Deprecated
 public abstract class AbstractRSocket implements RSocketHandler {
 
   @Override
