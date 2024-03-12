@@ -13,7 +13,7 @@ Very fast GRPC-like & GRPC-compatible services on JVM with rich streaming models
 
 >multiple APIs: CompletableFuture or virtual threads; traditional streaming with GRPC-API (StreamObserver), or flavor of reactive: smallrye-mutiny, rxjava, reactor;
 > 
->pluggable networking: TCP, unix sockets, VM sockets, GRPC, websockets, websockets-over-http2;
+>pluggable networking: TCP / UNIX / VM sockets; GRPC, websockets, websockets-over-http2, multiprotocol;
 > 
 >service APIs / RPC codegen stubs (Message-Streams) are split from library runtime (RSocket-JVM, including network transports, load estimators, metrics);
 > 
@@ -46,7 +46,7 @@ Project supports 3 kinds of APIs:
 **GRPC compatible**. All implementations are directly compatible with GRPC via MessageStreams-RPC & GRPC transport.
 GRPC clients can access such services without separate "gateway" binaries and IDL sharing schemes.
  
-**Non-intrusive**. [MessageStreams](https://github.com/jauntsdn/rsocket-jvm/blob/1.5.3/rsocket-reactor/src/main/java/com/jauntsdn/rsocket/MessageStreams.java) API & [RSocket-JVM](https://github.com/jauntsdn/rsocket-jvm/blob/1.5.3/rsocket-reactor/src/main/java/com/jauntsdn/rsocket/RSocket.java) runtime are clearly split so from end-user perspective there is 
+**Non-intrusive**. [MessageStreams](https://github.com/jauntsdn/rsocket-jvm/blob/1.5.4/rsocket-reactor/src/main/java/com/jauntsdn/rsocket/MessageStreams.java) API & [RSocket-JVM](https://github.com/jauntsdn/rsocket-jvm/blob/1.5.4/rsocket-reactor/src/main/java/com/jauntsdn/rsocket/RSocket.java) runtime are clearly split so from end-user perspective there is 
 only set of streaming & non-streaming interactions on buffers/messages:
 
 **traditional streaming**
@@ -125,10 +125,10 @@ repositories {
 }
 
 dependencies {
-    implementation "com.jauntsdn.rsocket:rsocket-messages:1.5.3"
-    implementation "com.jauntsdn.rsocket:rsocket-rpc-idl:1.5.3"
-    implementation "com.jauntsdn.rsocket:rsocket-<VENDOR>:1.5.3"
-    implementation "com.jauntsdn.rsocket:rsocket-rpc-<VENDOR>:1.5.3"
+    implementation "com.jauntsdn.rsocket:rsocket-messages:1.5.4"
+    implementation "com.jauntsdn.rsocket:rsocket-rpc-idl:1.5.4"
+    implementation "com.jauntsdn.rsocket:rsocket-<VENDOR>:1.5.4"
+    implementation "com.jauntsdn.rsocket:rsocket-rpc-<VENDOR>:1.5.4"
 }
 ```
 
@@ -137,7 +137,7 @@ MessageStreams-RPC compiler binaries are linux, windows(x86) only
 protobuf {
      plugins {
           rsocketRpc {
-              artifact = "com.jauntsdn.rsocket:rsocket-rpc-<VENDOR>-compiler:1.5.3"
+              artifact = "com.jauntsdn.rsocket:rsocket-rpc-<VENDOR>-compiler:1.5.4"
           }
      }
 }
