@@ -71,7 +71,7 @@ public final class Lease {
     }
 
     Metadata serviceCallLatency(long serviceCallLatency) {
-      requirePositive(serviceCallLatency, "serviceCallLatency");
+      requireNonZero(serviceCallLatency, "serviceCallLatency");
       for (int i = 0; i < serviceCallLatencies.length; i++) {
         if (serviceCallLatencies[i] == 0) {
           serviceCallLatencies[i] = serviceCallLatency;
@@ -117,6 +117,13 @@ public final class Lease {
     static long requirePositive(long value, String message) {
       if (value <= 0) {
         throw new IllegalArgumentException(message + " must be positive");
+      }
+      return value;
+    }
+
+    static long requireNonZero(long value, String message) {
+      if (value == 0) {
+        throw new IllegalArgumentException(message + " must be non-zero");
       }
       return value;
     }
