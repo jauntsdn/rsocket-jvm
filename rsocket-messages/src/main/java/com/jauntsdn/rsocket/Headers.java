@@ -34,19 +34,26 @@ import javax.annotation.Nullable;
 public final class Headers {
   public static int HEADER_LENGTH_MAX = 8192;
 
-  private static final Headers EMPTY = new Headers(false, 0, Collections.emptyList(), 0);
-  private static final Headers DEFAULT_SERVICE = new Headers(true, 0, Collections.emptyList(), 0);
+  private static final Headers EMPTY = new Headers(false, 0, null, Collections.emptyList(), 0);
+  private static final Headers DEFAULT_SERVICE =
+      new Headers(true, 0, null, Collections.emptyList(), 0);
 
   private final boolean isDefaultService;
   private final int serializedSize;
   private final long timeoutMillis;
+  private final RetryPolicy retryPolicy;
   private final List<String> keyValues;
   private volatile ByteBuf cache;
 
   private Headers(
-      boolean isDefaultService, long timeoutMillis, List<String> keyValues, int serializedSize) {
+      boolean isDefaultService,
+      long timeoutMillis,
+      @Nullable RetryPolicy retryPolicy,
+      List<String> keyValues,
+      int serializedSize) {
     this.isDefaultService = isDefaultService;
     this.timeoutMillis = timeoutMillis;
+    this.retryPolicy = retryPolicy;
     this.keyValues = keyValues;
     this.serializedSize = serializedSize;
   }
@@ -57,6 +64,10 @@ public final class Headers {
 
   public long timeoutMillis() {
     return timeoutMillis;
+  }
+
+  public RetryPolicy retryPolicy() {
+    return retryPolicy;
   }
 
   public String header(String name) {
@@ -142,7 +153,16 @@ public final class Headers {
 
   @Override
   public String toString() {
-    return "Headers{" + "isDefaultService=" + isDefaultService + ", keyValues=" + keyValues + '}';
+    return "Headers{"
+        + "isDefaultService="
+        + isDefaultService
+        + ", timeoutMillis="
+        + timeoutMillis
+        + ", retryPolicy="
+        + retryPolicy
+        + ", keyValues="
+        + keyValues
+        + '}';
   }
 
   public Headers.Builder toBuilder() {
@@ -162,7 +182,7 @@ public final class Headers {
     if (headers.length == 0) {
       return isDefaultService ? DEFAULT_SERVICE : EMPTY;
     }
-    return new Headers(isDefaultService, 0, Arrays.asList(headers), serializedSize);
+    return new Headers(isDefaultService, 0, null, Arrays.asList(headers), serializedSize);
   }
 
   public static Headers empty() {
@@ -178,7 +198,13 @@ public final class Headers {
     if (timeoutMillis == 0) {
       return EMPTY;
     }
-    return new Headers(false, timeoutMillis, Collections.emptyList(), 0);
+    return new Headers(false, timeoutMillis, null, Collections.emptyList(), 0);
+  }
+
+  public static Headers withRetry(long timeoutMillis, RetryPolicy retryPolicy) {
+    requireNonNegative(timeoutMillis, "timeoutMillis");
+    Objects.requireNonNull(retryPolicy, "retryPolicy");
+    return new Headers(false, timeoutMillis, retryPolicy, Collections.emptyList(), 0);
   }
 
   public static Headers.Builder newBuilder() {
@@ -194,7 +220,7 @@ public final class Headers {
     if (headers.isEmpty()) {
       return EMPTY;
     }
-    return new Headers(false, 0, headers, serializedSize);
+    return new Headers(false, 0, null, headers, serializedSize);
   }
 
   ByteBuf cache() {
@@ -220,6 +246,7 @@ public final class Headers {
     private boolean isDefaultService;
     private long timeoutMillis;
     private int serializedSize;
+    private RetryPolicy retryPolicy;
 
     private Builder(int size, List<String> headers) {
       int length = headers.size();
@@ -243,6 +270,11 @@ public final class Headers {
 
     public Builder timeout(long timeoutMillis) {
       this.timeoutMillis = requireNonNegative(timeoutMillis, "timeoutMillis");
+      return this;
+    }
+
+    public Builder retryPolicy(RetryPolicy retryPolicy) {
+      this.retryPolicy = Objects.requireNonNull(retryPolicy, "retryPolicy");
       return this;
     }
 
@@ -299,16 +331,90 @@ public final class Headers {
     }
 
     public Headers build() {
-      return new Headers(isDefaultService, timeoutMillis, nameValues, serializedSize);
+      return new Headers(isDefaultService, timeoutMillis, retryPolicy, nameValues, serializedSize);
     }
   }
 
-  private static String requireNonEmpty(String seq, String message) {
-    Objects.requireNonNull(seq, message);
-    if (seq.length() == 0) {
-      throw new IllegalArgumentException(message + " must be non-empty");
+  /**
+   * Configures automatic retry of failed requests. Intended mostly for RPC implementations lacking
+   * API support for retries, e.g. futures, grpc-stub.
+   */
+  public static final class RetryPolicy {
+    private final int maxAttempts;
+    private final float initialBackoff;
+    private final float maxBackoff;
+    private final int backoffMultiplier;
+
+    private RetryPolicy(
+        int maxAttempts, float initialBackoff, float maxBackoff, int backoffMultiplier) {
+      this.maxAttempts = maxAttempts;
+      this.initialBackoff = initialBackoff;
+      this.maxBackoff = maxBackoff;
+      this.backoffMultiplier = backoffMultiplier;
     }
-    return seq;
+
+    public static RetryPolicy create(
+        int maxAttempts, long initialBackoffMillis, long maxBackoffMillis, int backoffMultiplier) {
+      return new RetryPolicy(
+          requirePositive(maxAttempts, "maxAttempts"),
+          requireNonNegative(initialBackoffMillis, "initialBackoffMillis"),
+          requireNonNegative(maxBackoffMillis, "maxBackoffMillis"),
+          requireNonNegative(backoffMultiplier, "backoffMultiplier"));
+    }
+
+    public static RetryPolicy.Builder newBuilder() {
+      return new Builder();
+    }
+
+    @Override
+    public String toString() {
+      return "RetryPolicy{"
+          + "maxAttempts="
+          + maxAttempts
+          + ", initialBackoff="
+          + initialBackoff
+          + ", maxBackoff="
+          + maxBackoff
+          + ", backoffMultiplier="
+          + backoffMultiplier
+          + '}';
+    }
+
+    public static final class Builder {
+      private int maxAttempts;
+      private long initialBackoff;
+      private long maxBackoff;
+      private int backoffMultiplier;
+
+      public Builder() {}
+
+      public Builder maxAttempts(int maxAttempts) {
+        this.maxAttempts = requirePositive(maxAttempts, "maxAttempts");
+        return this;
+      }
+
+      public Builder initialBackoff(long initialBackoffMillis) {
+        this.initialBackoff = requireNonNegative(initialBackoffMillis, "initialBackoffMillis");
+        return this;
+      }
+
+      public Builder maxBackoff(long maxBackoffMillis) {
+        this.maxBackoff = requireNonNegative(maxBackoffMillis, "maxBackoffMillis");
+        return this;
+      }
+
+      public Builder backoffMultiplier(int backoffMultiplier) {
+        this.backoffMultiplier = requireNonNegative(backoffMultiplier, "backoffMultiplier");
+        return this;
+      }
+
+      public RetryPolicy build() {
+        if (initialBackoff > maxBackoff) {
+          throw new IllegalArgumentException("initialBackoff exceeds maxBackoff");
+        }
+        return new RetryPolicy(maxAttempts, initialBackoff, maxBackoff, backoffMultiplier);
+      }
+    }
   }
 
   private static int requireValid(List<String> keyValues, String message) {
@@ -340,6 +446,20 @@ public final class Headers {
   private static long requireNonNegative(long value, String message) {
     if (value < 0) {
       throw new IllegalArgumentException(message + " must be non-negative");
+    }
+    return value;
+  }
+
+  private static int requireNonNegative(int value, String message) {
+    if (value < 0) {
+      throw new IllegalArgumentException(message + " must be non-negative");
+    }
+    return value;
+  }
+
+  private static int requirePositive(int value, String message) {
+    if (value <= 0) {
+      throw new IllegalArgumentException(message + " must be positive");
     }
     return value;
   }
