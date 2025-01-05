@@ -142,6 +142,7 @@ public interface RpcService extends MessageStreams {
       this.instrumentation = null;
     }
 
+    @SuppressWarnings("unchecked")
     protected final <S> S service() {
       return (S) service;
     }

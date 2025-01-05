@@ -27,6 +27,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.function.Function;
 import javax.annotation.Nullable;
 
+@SuppressWarnings("unchecked")
 public final class RpcMessageCodec {
 
   private RpcMessageCodec() {}

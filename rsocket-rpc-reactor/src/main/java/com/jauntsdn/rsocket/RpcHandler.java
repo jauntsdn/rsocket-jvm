@@ -28,7 +28,6 @@ import javax.annotation.Nullable;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.core.publisher.MonoProcessor;
 
 /** Utility for serving multiple {@link RpcService} from single {@link MessageStreams} endpoint. */
 public final class RpcHandler implements MessageStreamsHandler {
@@ -39,7 +38,11 @@ public final class RpcHandler implements MessageStreamsHandler {
 
   private final Map<String, RpcService> services;
   private final RpcService defaultService;
-  private final MonoProcessor<Void> onClose = MonoProcessor.create();
+
+  @SuppressWarnings("deprecation")
+  private final reactor.core.publisher.MonoProcessor<Void> onClose =
+      reactor.core.publisher.MonoProcessor.create();
+
   private final Consumer<Throwable> errorConsumer;
 
   public static RpcHandler create(RpcService... rpcServices) {
