@@ -50,6 +50,7 @@ public interface RpcService extends MessageStreamsHandler {
       this.instrumentation = null;
     }
 
+    @SuppressWarnings("unchecked")
     protected final <S> S service() {
       return (S) service;
     }

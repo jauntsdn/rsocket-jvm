@@ -129,4 +129,13 @@ public class RSocketProxy implements RSocket, RSocketHandler {
     }
     return s.isDisposed() ? 0.0 : 1.0;
   }
+
+  @Override
+  public Optional<AvailabilityListener> onAvailability() {
+    MessageStreams s = source;
+    if (s instanceof RSocket) {
+      return ((RSocket) s).onAvailability();
+    }
+    return Optional.empty();
+  }
 }

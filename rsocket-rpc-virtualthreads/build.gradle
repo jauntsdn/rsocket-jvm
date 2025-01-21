@@ -6,10 +6,6 @@ plugins {
 
 description = "RSocket-rpc-virtualthreads api library"
 
-compileJava {
-    options.compilerArgs << "--enable-preview"
-}
-
 dependencies {
     api project(":rsocket-rpc-futures")
 }

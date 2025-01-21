@@ -61,4 +61,11 @@ public interface RSocket extends MessageStreams, Availability {
     }
     return new RSocketProxy(messageStreams);
   }
+
+  static RSocket from(Availability availability) {
+    if (availability instanceof RSocket) {
+      return (RSocket) availability;
+    }
+    throw new IllegalArgumentException(availability + "is not RSocket");
+  }
 }

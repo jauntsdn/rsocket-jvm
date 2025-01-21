@@ -34,8 +34,8 @@ subprojects {
 
     def name = project.name
     def javaVersion =
-            name.endsWith("virtualthreads") ? 20
-                    : name.endsWith("helidon") || name.endsWith("mutiny") || name.endsWith("test") ? 11
+            name.endsWith("virtualthreads") ? 21
+                    : name.endsWith("mutiny") || name.endsWith("test") ? 11
                     : 8
 
     plugins.withType(JavaLibraryPlugin) {

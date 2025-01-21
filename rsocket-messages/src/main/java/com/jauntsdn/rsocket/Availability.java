@@ -16,9 +16,12 @@
 
 package com.jauntsdn.rsocket;
 
+import java.util.Optional;
+import java.util.function.Consumer;
+
 /**
- * API to compare entities availability (higher is better). In channel/RSocket context value of 1.0
- * corresponds to fully available, 0.0 to unavailable
+ * API to listen for changes and compare entities availability (higher is better). In
+ * channel/RSocket context value of 1.0 corresponds to fully available, 0.0 to unavailable
  */
 public interface Availability {
 
@@ -31,5 +34,36 @@ public interface Availability {
   /** Represents availability of given interaction type with rank equal or higher than given rank */
   default double availability(Interaction interaction) {
     return availability(interaction.rank());
+  }
+
+  /** Provides API to listen for availability changes */
+  default Optional<AvailabilityListener> onAvailability() {
+    return Optional.empty();
+  }
+
+  interface AvailabilityListener {
+
+    /**
+     * Provides one time notification for next availability. Notifies immediately if already
+     * available
+     */
+    void onNextAvailability(OnAvailability onAvailability);
+
+    interface Subscription {
+
+      void cancel();
+    }
+
+    interface OnAvailability extends Consumer<Availability> {
+
+      void onNext(Availability availability);
+
+      default void onSubscribe(Subscription subscription) {}
+
+      @Override
+      default void accept(Availability availability) {
+        onNext(availability);
+      }
+    }
   }
 }

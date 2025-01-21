@@ -23,7 +23,6 @@ dependencies {
 
         api "io.grpc:grpc-stub:${grpcStubVersion}"
         api "io.reactivex.rxjava3:rxjava:${rxjavaVersion}"
-        api "io.helidon.common:helidon-common-reactive:${helidonCommonReactiveVersion}"
         api "io.smallrye.reactive:mutiny:${mutinyVersion}"
         api "com.google.protobuf:protobuf-java:${protobufVersion}"
         api "com.google.protobuf:protobuf-javalite:${protobufVersion}"
@@ -39,7 +38,6 @@ dependencies {
         api "com.jauntsdn.rsocket:rsocket-rpc-mutiny-compiler:${version}"
         api "com.jauntsdn.rsocket:rsocket-rpc-reactor-compiler:${version}"
         api "com.jauntsdn.rsocket:rsocket-rpc-rxjava-compiler:${version}"
-        api "com.jauntsdn.rsocket:rsocket-rpc-helidon-compiler:${version}"
         api "com.google.protobuf:protoc:${protobufVersion}"
     }
 }
