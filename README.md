@@ -3,11 +3,11 @@
 ![Maven Central](https://img.shields.io/maven-central/v/com.jauntsdn.rsocket/rsocket-bom)
 [![Build](https://github.com/jauntsdn/rsocket-jvm/actions/workflows/ci-build.yml/badge.svg)](https://github.com/jauntsdn/rsocket-jvm/actions/workflows/ci-build.yml)
 
-# jauntsdn.com Message-Streams / RSocket-JVM
+# Message-Streams / RSocket-JVM
 
 ![RSocket-JVM implementations](readme/impls_stripe.png)
 
-Very fast GRPC-like & GRPC-compatible services on JVM with rich streaming models over multiple data-center and internet transports [[1]](https://jauntsdn.com/mstreams/).
+Very fast GRPC-like & GRPC-compatible services on JVM with rich streaming models over multiple data-center and internet transports [[1]](https://jauntsdn.github.io/mstreams/).
 
 ## Summary
 
@@ -21,9 +21,9 @@ Very fast GRPC-like & GRPC-compatible services on JVM with rich streaming models
 > 
 >operates on hardware ranging from single board computers & mobile (2 cores / 32 MB heap) to cloud hosts (dozens of cores / 32+ GB heap).
 
-`RSocket-JVM` is [very fast](https://jauntsdn.com/post/rsocket-summary/) alternative (millions of messages per core with each interaction) to 
+`RSocket-JVM` is [very fast](https://jauntsdn.github.io/post/rsocket-summary/) alternative (millions of messages per core with each interaction) to 
 projectreactor-only `RSocket/RSocket-java` from now-defunct "Reactive Foundation" -
-which is plagued by number of performance and security [problems](https://jauntsdn.com/post/rsocket-vs-spring/).
+which is plagued by number of performance and security [problems](https://jauntsdn.github.io/post/rsocket-vs-spring/).
 
 RSocket is low latency/high throughput L5 network protocol intended for high-performance services communication. 
 It is transport agnostic, and runs on top of any reliable byte stream transport.
@@ -35,7 +35,7 @@ multiple transports using multiple APIs.
 
 ### CompletableFuture & virtual threads; GRPC StreamObserver; smallrye-mutiny, rxjava, project-reactor
 
-**Multiple vendor libraries**. [Shared protocol core](https://jauntsdn.com/post/rsocket-jvm/) with minimal dependencies 
+**Multiple vendor libraries**. [Shared protocol core](https://jauntsdn.github.io/post/rsocket-jvm/) with minimal dependencies 
 (`netty-buffer` only) streamlines development process for each vendor implementation & reduces cost of maintenance of multiple libraries.
 
 Project supports 3 kinds of APIs: 
@@ -67,7 +67,7 @@ only set of streaming & non-streaming interactions on buffers/messages:
 
 ### RPC 
 
-[MessageStreams-RPC](https://jauntsdn.com/post/rsocket-grpc/) is reflection-free, codegen based remote procedure call system 
+[MessageStreams-RPC](https://jauntsdn.github.io/post/rsocket-grpc/) is reflection-free, codegen based remote procedure call system 
 relying on single data format - protocol buffers. This combination opened many optimization opportunities and enabled 
 GRPC interop via respective GRPC transport.
 
@@ -179,7 +179,7 @@ is free to change to accommodate new needs.
 RSocket-JVM is optimized for small messages < 1KiB in size, typically 0.1 - 0.5 KiB: range covers common use cases
 from telemetry to social network chats. The goal is overwhelming throughput advantage 
 (Message Streams + RPC, per cpu) over GRPC-java for additional latency < 5 millis (typically ~1 ms) 
-with TCP transport, particularly request-response interaction ([comparison](https://jauntsdn.com/post/rsocket-vs-spring)). 
+with TCP transport, particularly request-response interaction ([comparison](https://jauntsdn.github.io/post/rsocket-vs-spring)). 
 Advantage < 2x would probably make project non-competitive against GRPC due to new network software stack and different programming
 model (as in case of RSocket/RSocket-java from "reactive foundation" which somehow is even slower than GRPC-java on streaming interactions).
 
