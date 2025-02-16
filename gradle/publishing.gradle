@@ -22,7 +22,7 @@ subprojects {
                         afterEvaluate {
                             description = project.description
                         }
-                        url = "https://jauntsdn.com"
+                        url = "https://jauntsdn.github.io"
                         licenses {
                             license {
                                 name = "The Apache Software License, Version 2.0"

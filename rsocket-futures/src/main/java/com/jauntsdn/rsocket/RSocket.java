@@ -16,9 +16,11 @@
 
 package com.jauntsdn.rsocket;
 
+import io.netty.buffer.ByteBuf;
 import java.util.Optional;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 /**
@@ -33,6 +35,14 @@ public interface RSocket extends MessageStreams, Availability {
    * @param message containing connection metadata.
    */
   CompletionStage<Void> metadataPush(Message message);
+
+  /**
+   * @return unreliable unidirectional or bidirectional communication channel if underlying
+   *     transport supports It (e.g. QUIC-DATAGRAM extension, WebTransport-QUIC)
+   */
+  default Optional<UnreliableChannel> unreliableChannel() {
+    return Optional.empty();
+  }
 
   /**
    * @return lightweight {@link ScheduledExecutorService} intended for non-fine-grained tasks
@@ -50,6 +60,26 @@ public interface RSocket extends MessageStreams, Availability {
   @Override
   default double availability() {
     return availability(0);
+  }
+
+  interface UnreliableChannel {
+
+    Consumer<ByteBuf> unreliableChannel(Consumer<ByteBuf> messages);
+
+    Attributes attributes();
+
+    interface Attributes {
+
+      int messageSizeLimit();
+
+      Direction direction();
+    }
+
+    enum Direction {
+      INBOUND,
+      OUTBOUND,
+      BIDIRECTIONAL
+    }
   }
 
   @FunctionalInterface

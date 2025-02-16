@@ -16,11 +16,14 @@
 
 package com.jauntsdn.rsocket;
 
+import io.netty.buffer.ByteBuf;
 import io.reactivex.rxjava3.core.Completable;
+import io.reactivex.rxjava3.core.Flowable;
 import io.reactivex.rxjava3.core.Scheduler;
 import java.util.Optional;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.function.Function;
+import org.reactivestreams.Publisher;
 
 /**
  * Models RSocket interactions as described in
@@ -34,6 +37,14 @@ public interface RSocket extends MessageStreams, Availability {
    * @param message containing connection metadata.
    */
   Completable metadataPush(Message message);
+
+  /**
+   * @return unreliable unidirectional or bidirectional communication channel if underlying
+   *     transport supports It (e.g. QUIC-DATAGRAM extension, WebTransport-QUIC)
+   */
+  default Optional<UnreliableChannel> unreliableChannel() {
+    return Optional.empty();
+  }
 
   /**
    * @return lightweight {@link ScheduledExecutorService} intended for non-fine-grained tasks
@@ -51,6 +62,26 @@ public interface RSocket extends MessageStreams, Availability {
   @Override
   default double availability() {
     return availability(0);
+  }
+
+  interface UnreliableChannel {
+
+    Flowable<ByteBuf> unreliableChannel(Publisher<ByteBuf> messages);
+
+    Attributes attributes();
+
+    interface Attributes {
+
+      int messageSizeLimit();
+
+      Direction direction();
+    }
+
+    enum Direction {
+      INBOUND,
+      OUTBOUND,
+      BIDIRECTIONAL
+    }
   }
 
   @FunctionalInterface
