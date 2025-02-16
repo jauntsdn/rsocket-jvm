@@ -17,6 +17,7 @@
 package com.jauntsdn.rsocket;
 
 import io.grpc.stub.StreamObserver;
+import io.netty.buffer.ByteBuf;
 import java.util.Optional;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.function.Function;
@@ -35,6 +36,14 @@ public interface RSocket extends MessageStreams, Availability {
   void metadataPush(Message message, StreamObserver<Message> responseObserver);
 
   /**
+   * @return unreliable unidirectional or bidirectional communication channel if underlying
+   *     transport supports It (e.g. QUIC-DATAGRAM extension, WebTransport-QUIC)
+   */
+  default Optional<UnreliableChannel> unreliableChannel() {
+    return Optional.empty();
+  }
+
+  /**
    * @return lightweight {@link ScheduledExecutorService} intended for non-fine-grained tasks
    *     scheduling (e.g. timeouts).
    */
@@ -50,6 +59,26 @@ public interface RSocket extends MessageStreams, Availability {
   @Override
   default double availability() {
     return availability(0);
+  }
+
+  interface UnreliableChannel {
+
+    StreamObserver<ByteBuf> unreliableChannel(StreamObserver<ByteBuf> messages);
+
+    Attributes attributes();
+
+    interface Attributes {
+
+      int messageSizeLimit();
+
+      Direction direction();
+    }
+
+    enum Direction {
+      INBOUND,
+      OUTBOUND,
+      BIDIRECTIONAL
+    }
   }
 
   @FunctionalInterface
