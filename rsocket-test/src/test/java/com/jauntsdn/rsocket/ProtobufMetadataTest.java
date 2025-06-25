@@ -31,7 +31,7 @@ public class ProtobufMetadataTest {
   @Test
   void encodeLength() {
     for (int l = 1; l < 8192; l++) {
-      String str = "s".repeat(l);
+      String str = repeat("s", l);
       Headers headers = Headers.create(str, str);
       int lenSize = l <= 127 ? 2 : 3;
       ByteBuf expectedLenBuf = encodeProtobufJava(headers).slice(0, lenSize);
@@ -61,10 +61,10 @@ public class ProtobufMetadataTest {
 
   @Test
   void encodeLargeHeaders() {
-    String k = "k".repeat(300);
-    String v = "v".repeat(300);
-    String a = "a".repeat(300);
-    String b = "b".repeat(300);
+    String k = repeat("k", 300);
+    String v = repeat("v", 300);
+    String a = repeat("a", 300);
+    String b = repeat("b", 300);
     Headers headers = Headers.create(k, v, a, b);
     ByteBuf expectedBuf = encodeProtobufJava(headers);
     ByteBuf actualBuf = encodeProtobufHeaders(headers);
@@ -79,10 +79,10 @@ public class ProtobufMetadataTest {
   @Test
   void decodeHeaders() {
     for (int l = 1; l < 8192; l++) {
-      String key1 = "k".repeat(l);
-      String value1 = "v".repeat(l);
-      String key2 = "a".repeat(l);
-      String value2 = "b".repeat(l);
+      String key1 = repeat("k", l);
+      String value1 = repeat("v", l);
+      String key2 = repeat("a", l);
+      String value2 = repeat("b", l);
       Headers expected = Headers.create(key1, value1, key2, value2);
       ByteBuf metadata = encodeProtobufJava(expected);
       int actualSerializedSize = metadata.readableBytes();
@@ -98,8 +98,8 @@ public class ProtobufMetadataTest {
 
   @Test
   void decodeTooLargeHeaders() {
-    String key = "k".repeat(42_000);
-    String value = "v".repeat(22_000);
+    String key = repeat("k", 42_000);
+    String value = repeat("v", 22_000);
     ByteBuf metadata = encodeProtobufJava(Arrays.asList(key, value));
     try {
       org.junit.jupiter.api.Assertions.assertThrows(
@@ -118,21 +118,21 @@ public class ProtobufMetadataTest {
     Assertions.assertThat(actual).isSameAs(Headers.empty());
   }
 
-  public static ByteBuf encodeProtobufHeadersLen(int len) {
+  static ByteBuf encodeProtobufHeadersLen(int len) {
     ByteBuf buffer = ByteBufAllocator.DEFAULT.buffer(3);
     Rpc.ProtoMetadata.encodeLen(buffer, len);
     return buffer;
   }
 
-  public static ByteBuf encodeProtobufHeaders(Headers headers) {
+  static ByteBuf encodeProtobufHeaders(Headers headers) {
     return Rpc.ProtoMetadata.encodeHeaders(headers);
   }
 
-  public static ByteBuf encodeProtobufJava(Headers headers) {
+  static ByteBuf encodeProtobufJava(Headers headers) {
     return encodeProtobufJava(Rpc.ProtoMetadata.getHeaders(headers));
   }
 
-  public static ByteBuf encodeProtobufJava(List<String> headers) {
+  static ByteBuf encodeProtobufJava(List<String> headers) {
     RpcCallMetadata message = RpcCallMetadata.newBuilder().addAllNameValues(headers).build();
 
     int length = message.getSerializedSize();
@@ -147,5 +147,19 @@ public class ProtobufMetadataTest {
       throw new com.jauntsdn.rsocket.exceptions.SerializationException(
           "Message serialization error", t);
     }
+  }
+
+  static String repeat(String src, int count) {
+    if (count < 1) {
+      throw new IllegalArgumentException("count must be positive, provided: " + count);
+    }
+    if (count == 1) {
+      return src;
+    }
+    StringBuilder sb = new StringBuilder(src.length() * count);
+    for (int i = 0; i < count; i++) {
+      sb.append(src);
+    }
+    return sb.toString();
   }
 }
