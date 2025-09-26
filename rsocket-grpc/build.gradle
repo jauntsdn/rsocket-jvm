@@ -15,6 +15,7 @@ dependencies {
         exclude group: "io.grpc", module: "grpc-context"
         exclude group: "com.google.guava", module: "guava"
         exclude group: "com.google.errorprone", module: "error_prone_annotations"
+        exclude group: "org.codehaus.mojo", module: "animal-sniffer-annotations"
     }
 
     compileOnly "com.google.code.findbugs:jsr305"
