@@ -1,6 +1,5 @@
 pluginManagement {
     plugins {
-        id "com.github.ben-manes.versions" version "${versionsPluginVersion}"
         id "io.spring.dependency-management" version "${dependencyManagementPluginVersion}"
         id "com.google.protobuf" version "${protobufPluginVersion}"
         id "com.github.sherter.google-java-format" version "${googleJavaFormatPluginVersion}"

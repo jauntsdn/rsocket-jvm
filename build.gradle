@@ -7,7 +7,6 @@ plugins {
     id "com.google.protobuf" apply false
     id "com.github.sherter.google-java-format" apply false
     id "com.palantir.git-version"
-    id "com.github.ben-manes.versions"
 }
 
 description = "RSocket-jvm api libraries: parent"
@@ -93,12 +92,6 @@ subprojects {
 task printProjectVersion {
     doLast {
         println "Project version: ${projectVersion(project)}"
-    }
-}
-
-task updates {
-    doLast {
-        dependencyUpdates
     }
 }
 
