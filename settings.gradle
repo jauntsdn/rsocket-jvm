@@ -4,6 +4,7 @@ pluginManagement {
         id "com.google.protobuf" version "${protobufPluginVersion}"
         id "com.github.sherter.google-java-format" version "${googleJavaFormatPluginVersion}"
         id "com.palantir.git-version" version "${gitPluginVersion}"
+        id "org.gradle.toolchains.foojay-resolver-convention" version "${foojayPluginVersion}"
     }
 }
 
