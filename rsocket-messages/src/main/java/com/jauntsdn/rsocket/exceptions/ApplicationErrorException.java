@@ -16,8 +16,6 @@
 
 package com.jauntsdn.rsocket.exceptions;
 
-import javax.annotation.Nullable;
-
 public class ApplicationErrorException extends ChannelException {
   private static final long serialVersionUID = 4885141821185842644L;
 
@@ -27,10 +25,6 @@ public class ApplicationErrorException extends ChannelException {
 
   public ApplicationErrorException(String message, Throwable cause) {
     super(message, cause);
-  }
-
-  ApplicationErrorException(String message, @Nullable Throwable cause, boolean isLightWeight) {
-    super(message, cause, isLightWeight);
   }
 
   @Override

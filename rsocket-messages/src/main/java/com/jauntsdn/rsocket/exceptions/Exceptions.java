@@ -66,7 +66,7 @@ public final class Exceptions {
   public static final String LEASE_EXHAUSTED_MESSAGE = "lease_exhausted";
 
   public static final RejectedException LEASE_EXPIRE_EXCEPTION =
-      new RejectedException(LEASE_EXPIRED_MESSAGE, null, true);
+      new RejectedException(LEASE_EXPIRED_MESSAGE, null, false);
   public static final RejectedException LEASE_EXHAUST_EXCEPTION =
-      new RejectedException(LEASE_EXHAUSTED_MESSAGE, null, true);
+      new RejectedException(LEASE_EXHAUSTED_MESSAGE, null, false);
 }

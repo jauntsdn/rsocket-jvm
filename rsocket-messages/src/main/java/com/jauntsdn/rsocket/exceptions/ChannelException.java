@@ -26,15 +26,15 @@ public abstract class ChannelException extends RuntimeException {
   }
 
   public ChannelException(String message, @Nullable Throwable cause) {
-    this(message, cause, false);
+    this(message, cause, true);
   }
 
-  ChannelException(String message, @Nullable Throwable cause, boolean isLightWeight) {
+  ChannelException(String message, @Nullable Throwable cause, boolean enableSuppression) {
     super(
         Objects.requireNonNull(message, "message must not be null"),
         cause,
-        !isLightWeight,
-        !isLightWeight);
+        enableSuppression,
+        false);
   }
 
   public abstract int errorCode();

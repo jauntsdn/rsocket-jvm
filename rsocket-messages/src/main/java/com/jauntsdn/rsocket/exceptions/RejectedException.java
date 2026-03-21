@@ -29,8 +29,8 @@ public final class RejectedException extends ChannelException {
     super(message, cause);
   }
 
-  RejectedException(String message, @Nullable Throwable cause, boolean isLightWeight) {
-    super(message, cause, isLightWeight);
+  RejectedException(String message, @Nullable Throwable cause, boolean enableSuppression) {
+    super(message, cause, enableSuppression);
   }
 
   @Override

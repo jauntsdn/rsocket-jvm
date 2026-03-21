@@ -20,6 +20,6 @@ public final class SerializationException extends ApplicationErrorException {
   private static final long serialVersionUID = 8193920936798411113L;
 
   public SerializationException(String message, Throwable cause) {
-    super(message, cause, true);
+    super(message, cause);
   }
 }

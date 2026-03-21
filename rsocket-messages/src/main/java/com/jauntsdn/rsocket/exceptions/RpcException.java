@@ -20,10 +20,10 @@ public final class RpcException extends ApplicationErrorException {
   private static final long serialVersionUID = -1431407135939160848L;
 
   public RpcException(String message) {
-    super(message, null, true);
+    super(message);
   }
 
   public RpcException(String message, Throwable cause) {
-    super(message, cause, true);
+    super(message, cause);
   }
 }
