@@ -16,7 +16,7 @@
 
 package com.jauntsdn.rsocket.exceptions;
 
-public final class RejectedResumeException extends ChannelException {
+public final class RejectedResumeException extends SetupException {
   private static final long serialVersionUID = -4077489063892364013L;
 
   public RejectedResumeException(String message) {
