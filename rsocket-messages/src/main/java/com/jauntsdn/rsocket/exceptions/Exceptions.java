@@ -50,7 +50,11 @@ public final class Exceptions {
 
   public static void throwIfJvmFatal(Throwable t) {
     if (t instanceof Error) {
-      throw (Error) t;
+      if (t instanceof VirtualMachineError
+          || t instanceof ThreadDeath
+          || t instanceof LinkageError) {
+        throw (Error) t;
+      }
     }
   }
 
