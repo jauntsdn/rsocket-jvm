@@ -18,7 +18,6 @@ package com.jauntsdn.rsocket;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
-import io.netty.buffer.CompositeByteBuf;
 import io.netty.buffer.UnpooledByteBufAllocator;
 import java.util.Objects;
 import java.util.function.Consumer;
@@ -59,7 +58,7 @@ public final class MessageMetadata {
 
   /** Creates message metadata with heap ByteBufAllocator */
   public static MessageMetadata heapAllocator() {
-    return new MessageMetadata(UnpooledHeapByteBufAllocator.DEFAULT);
+    return new MessageMetadata(UnpooledByteBufAllocator.DEFAULT);
   }
 
   /**
@@ -101,117 +100,6 @@ public final class MessageMetadata {
     return val;
   }
 
-  static final class UnpooledHeapByteBufAllocator implements ByteBufAllocator {
-    static final UnpooledHeapByteBufAllocator DEFAULT = new UnpooledHeapByteBufAllocator();
-
-    UnpooledHeapByteBufAllocator() {}
-
-    @Override
-    public ByteBuf buffer() {
-      return UnpooledByteBufAllocator.DEFAULT.heapBuffer();
-    }
-
-    @Override
-    public ByteBuf buffer(int initialCapacity) {
-      return UnpooledByteBufAllocator.DEFAULT.heapBuffer(initialCapacity);
-    }
-
-    @Override
-    public ByteBuf buffer(int initialCapacity, int maxCapacity) {
-      return UnpooledByteBufAllocator.DEFAULT.heapBuffer(initialCapacity, maxCapacity);
-    }
-
-    @Override
-    public ByteBuf ioBuffer() {
-      throw unsupportedOperationException("ioBuffer");
-    }
-
-    @Override
-    public ByteBuf ioBuffer(int initialCapacity) {
-      throw unsupportedOperationException("ioBuffer");
-    }
-
-    @Override
-    public ByteBuf ioBuffer(int initialCapacity, int maxCapacity) {
-      throw unsupportedOperationException("ioBuffer");
-    }
-
-    @Override
-    public ByteBuf heapBuffer() {
-      throw unsupportedOperationException("heapBuffer");
-    }
-
-    @Override
-    public ByteBuf heapBuffer(int initialCapacity) {
-      throw unsupportedOperationException("heapBuffer");
-    }
-
-    @Override
-    public ByteBuf heapBuffer(int initialCapacity, int maxCapacity) {
-      throw unsupportedOperationException("heapBuffer");
-    }
-
-    @Override
-    public ByteBuf directBuffer() {
-      throw unsupportedOperationException("directBuffer");
-    }
-
-    @Override
-    public ByteBuf directBuffer(int initialCapacity) {
-      throw unsupportedOperationException("directBuffer");
-    }
-
-    @Override
-    public ByteBuf directBuffer(int initialCapacity, int maxCapacity) {
-      throw unsupportedOperationException("directBuffer");
-    }
-
-    @Override
-    public CompositeByteBuf compositeBuffer() {
-      throw unsupportedOperationException("compositeBuffer");
-    }
-
-    @Override
-    public CompositeByteBuf compositeBuffer(int maxNumComponents) {
-      throw unsupportedOperationException("compositeBuffer");
-    }
-
-    @Override
-    public CompositeByteBuf compositeHeapBuffer() {
-      throw unsupportedOperationException("compositeBuffer");
-    }
-
-    @Override
-    public CompositeByteBuf compositeHeapBuffer(int maxNumComponents) {
-      throw unsupportedOperationException("compositeBuffer");
-    }
-
-    @Override
-    public CompositeByteBuf compositeDirectBuffer() {
-      throw unsupportedOperationException("compositeBuffer");
-    }
-
-    @Override
-    public CompositeByteBuf compositeDirectBuffer(int maxNumComponents) {
-      throw unsupportedOperationException("compositeBuffer");
-    }
-
-    @Override
-    public boolean isDirectBufferPooled() {
-      throw unsupportedOperationException("isDirectBufferPooled");
-    }
-
-    @Override
-    public int calculateNewCapacity(int minNewCapacity, int maxCapacity) {
-      throw unsupportedOperationException("calculateNewCapacity");
-    }
-
-    private static RuntimeException unsupportedOperationException(String methodName) {
-      return new UnsupportedOperationException(
-          "not implemented: " + UnpooledHeapByteBufAllocator.class + "." + methodName);
-    }
-  }
-
   /*
    * Client metadata
    *
@@ -225,8 +113,11 @@ public final class MessageMetadata {
     static final int FLAG_DEFAULT_SERVICE = 0b1000_0000_0000_0000;
 
     static ByteBuf encode(ByteBufAllocator allocator, int metadataSize, boolean defaultService) {
-      ByteBuf buffer = allocator.buffer(HEADER_SIZE + metadataSize);
-
+      int capacity = HEADER_SIZE + metadataSize;
+      ByteBuf buffer =
+          allocator instanceof UnpooledByteBufAllocator
+              ? allocator.heapBuffer(capacity)
+              : allocator.buffer(capacity);
       buffer.writeShort((int) (HEADER_MAGIC >> 32));
       buffer.writeShort((int) ((HEADER_MAGIC >> 16) & 0xFFFF));
       buffer.writeShort((int) (HEADER_MAGIC & 0xFFFF));
