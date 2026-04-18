@@ -18,6 +18,12 @@ allprojects {
     dependencyLocking {
         lockAllConfigurations()
     }
+
+    configurations {
+        "googleJavaFormat1.6" {
+            resolutionStrategy.deactivateDependencyLocking()
+        }
+    }
 }
 
 subprojects {
