@@ -27,8 +27,10 @@ import java.util.Objects;
 import java.util.function.Consumer;
 import javax.annotation.Nullable;
 import org.reactivestreams.Publisher;
+import reactor.core.Scannable;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.publisher.Sinks;
 
 /** Utility for serving multiple {@link RpcService} from single {@link MessageStreams} endpoint. */
 public final class RpcHandler implements MessageStreamsHandler {
@@ -39,12 +41,8 @@ public final class RpcHandler implements MessageStreamsHandler {
 
   private final Map<String, RpcService> services;
   private final RpcService defaultService;
-
-  @SuppressWarnings("deprecation")
-  private final reactor.core.publisher.MonoProcessor<Void> onClose =
-      reactor.core.publisher.MonoProcessor.create();
-
   private final Consumer<Throwable> errorConsumer;
+  private final Sinks.Empty<Void> onClose = Sinks.empty();
 
   public static RpcHandler create(RpcService... rpcServices) {
     return new RpcHandler(null, rpcServices);
@@ -234,7 +232,7 @@ public final class RpcHandler implements MessageStreamsHandler {
   public void dispose() {
     Map<String, RpcService> svcs = services;
     if (svcs.isEmpty()) {
-      onClose.onComplete();
+      onClose.tryEmitEmpty();
       return;
     }
     svcs.forEach(
@@ -251,17 +249,18 @@ public final class RpcHandler implements MessageStreamsHandler {
             }
           }
         });
-    onClose.onComplete();
+    onClose.tryEmitEmpty();
   }
 
   @Override
   public boolean isDisposed() {
-    return onClose.isDisposed();
+    Boolean terminated = onClose.scan(Scannable.Attr.TERMINATED);
+    return terminated != null && terminated;
   }
 
   @Override
   public Mono<Void> onClose() {
-    return onClose;
+    return onClose.asMono();
   }
 
   static String service(ByteBuf metadata) {
