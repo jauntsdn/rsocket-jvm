@@ -16,6 +16,7 @@
 
 package com.jauntsdn.rsocket;
 
+import com.jauntsdn.rsocket.exceptions.Exceptions;
 import com.jauntsdn.rsocket.exceptions.RpcException;
 import io.netty.buffer.ByteBuf;
 import io.netty.util.ReferenceCountUtil;
@@ -120,6 +121,7 @@ public final class RpcHandler implements MessageStreamsHandler {
       return rpcService.fireAndForget(message);
     } catch (Throwable t) {
       ReferenceCountUtil.safeRelease(message);
+      Exceptions.throwIfJvmFatal(t);
       return Mono.error(t);
     }
   }
@@ -151,6 +153,7 @@ public final class RpcHandler implements MessageStreamsHandler {
       return rpcService.requestResponse(message);
     } catch (Throwable t) {
       ReferenceCountUtil.safeRelease(message);
+      Exceptions.throwIfJvmFatal(t);
       return Mono.error(t);
     }
   }
@@ -183,6 +186,7 @@ public final class RpcHandler implements MessageStreamsHandler {
       return rpcService.requestStream(message);
     } catch (Throwable t) {
       ReferenceCountUtil.safeRelease(message);
+      Exceptions.throwIfJvmFatal(t);
       return Flux.error(t);
     }
   }
@@ -221,6 +225,7 @@ public final class RpcHandler implements MessageStreamsHandler {
       return rpcService.requestChannel(message, messages);
     } catch (Throwable t) {
       ReferenceCountUtil.safeRelease(message);
+      Exceptions.throwIfJvmFatal(t);
       return Flux.error(t);
     }
   }
