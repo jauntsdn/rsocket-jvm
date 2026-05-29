@@ -32,6 +32,8 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
@@ -436,8 +438,22 @@ public final class Rpc {
   public static class ServiceDescriptor {
     private final List<Call> serviceCalls;
 
-    public ServiceDescriptor(List<Call> serviceCalls) {
-      this.serviceCalls = Objects.requireNonNull(serviceCalls, "serviceCalls");
+    public ServiceDescriptor(Collection<Call> serviceCalls) {
+      Objects.requireNonNull(serviceCalls, "serviceCalls");
+      switch (serviceCalls.size()) {
+        case 0:
+          this.serviceCalls = Collections.emptyList();
+          break;
+        case 1:
+          Call call =
+              serviceCalls instanceof List
+                  ? ((List<Call>) serviceCalls).get(0)
+                  : serviceCalls.iterator().next();
+          this.serviceCalls = Collections.singletonList(call);
+          break;
+        default:
+          this.serviceCalls = Collections.unmodifiableList(new ArrayList<>(serviceCalls));
+      }
     }
 
     public final List<Call> serviceCalls() {
@@ -454,13 +470,25 @@ public final class Rpc {
       final InboundMessageFactory inMessageFactory;
       final OutboundMessageFactory outMessageFactory;
 
-      private Call(
+      Call(
           String name,
           InboundMessageFactory inMessageFactory,
           OutboundMessageFactory outMessageFactory) {
         this.name = name;
         this.inMessageFactory = inMessageFactory;
         this.outMessageFactory = outMessageFactory;
+      }
+
+      public String name() {
+        return name;
+      }
+
+      public InboundMessageFactory inMessageFactory() {
+        return inMessageFactory;
+      }
+
+      public OutboundMessageFactory outMessageFactory() {
+        return outMessageFactory;
       }
 
       @Override
@@ -502,7 +530,121 @@ public final class Rpc {
         Objects.requireNonNull(method, "method");
         Objects.requireNonNull(inMessageFactory, "inMessageFactory");
         Objects.requireNonNull(outMessageFactory, "outMessageFactory");
-        return new Call('/' + service + '/' + method, inMessageFactory, outMessageFactory);
+        return new Call(name(service, method), inMessageFactory, outMessageFactory);
+      }
+
+      static String name(String service, String method) {
+        if (service.isEmpty()) {
+          return '/' + method;
+        }
+        return '/' + service + '/' + method;
+      }
+    }
+
+    public static final class CallDescriptor extends Call {
+      private final Interaction.Type interaction;
+      private final Class<?> inMessageType;
+      private final Class<?> outMessageType;
+
+      private CallDescriptor(
+          String name,
+          Interaction.Type interaction,
+          Class<?> inMessageType,
+          InboundMessageFactory inMessageFactory,
+          Class<?> outMessageType,
+          OutboundMessageFactory outMessageFactory) {
+        super(name, inMessageFactory, outMessageFactory);
+        this.interaction = interaction;
+        this.inMessageType = inMessageType;
+        this.outMessageType = outMessageType;
+      }
+
+      public Interaction.Type interaction() {
+        return interaction;
+      }
+
+      public Class<?> inMessageType() {
+        return inMessageType;
+      }
+
+      public Class<?> outMessageType() {
+        return outMessageType;
+      }
+
+      @Override
+      public String toString() {
+        return "CallDescriptor{"
+            + "name='"
+            + name
+            + '\''
+            + ", interaction="
+            + interaction
+            + ", inMessageType="
+            + inMessageType
+            + ", outMessageType="
+            + outMessageType
+            + '}';
+      }
+
+      @Override
+      public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        CallDescriptor that = (CallDescriptor) o;
+
+        return name.equals(that.name) && interaction == that.interaction;
+      }
+
+      @Override
+      public int hashCode() {
+        int result = super.hashCode();
+        result = 31 * result + name.hashCode();
+        result = 31 * result + interaction.hashCode();
+        return result;
+      }
+
+      public static CallDescriptor of(
+          String name,
+          Interaction.Type interaction,
+          Class<?> inMessageType,
+          InboundMessageFactory inMessageFactory,
+          Class<?> outMessageType,
+          OutboundMessageFactory outMessageFactory) {
+        Objects.requireNonNull(name, "name");
+        Objects.requireNonNull(interaction, "interaction");
+        Objects.requireNonNull(inMessageType, "inMessageType");
+        Objects.requireNonNull(inMessageFactory, "inMessageFactory");
+        Objects.requireNonNull(outMessageType, "outMessageType");
+        Objects.requireNonNull(outMessageFactory, "outMessageFactory");
+
+        return new CallDescriptor(
+            name, interaction, inMessageType, inMessageFactory, outMessageType, outMessageFactory);
+      }
+
+      public static CallDescriptor of(
+          String service,
+          String method,
+          Interaction.Type interaction,
+          Class<?> inMessageType,
+          InboundMessageFactory inMessageFactory,
+          Class<?> outMessageType,
+          OutboundMessageFactory outMessageFactory) {
+        Objects.requireNonNull(service, "service");
+        Objects.requireNonNull(method, "method");
+        Objects.requireNonNull(interaction, "interaction");
+        Objects.requireNonNull(inMessageType, "inMessageType");
+        Objects.requireNonNull(inMessageFactory, "inMessageFactory");
+        Objects.requireNonNull(outMessageType, "outMessageType");
+        Objects.requireNonNull(outMessageFactory, "outMessageFactory");
+
+        return new CallDescriptor(
+            name(service, method),
+            interaction,
+            inMessageType,
+            inMessageFactory,
+            outMessageType,
+            outMessageFactory);
       }
     }
 

@@ -34,6 +34,10 @@ public interface RpcService extends MessageStreams {
 
   Class<?> serviceType();
 
+  default Optional<Rpc.ServiceDescriptor> serviceDescriptor() {
+    return Optional.empty();
+  }
+
   interface Factory<T extends MessageStreams> {
 
     T withLifecycle(Closeable requester);
