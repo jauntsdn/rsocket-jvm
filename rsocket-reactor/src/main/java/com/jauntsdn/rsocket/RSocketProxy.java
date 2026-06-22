@@ -17,6 +17,7 @@
 package com.jauntsdn.rsocket;
 
 import io.netty.buffer.ByteBufAllocator;
+import java.util.Objects;
 import java.util.Optional;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
@@ -27,7 +28,7 @@ public class RSocketProxy implements RSocket, RSocketHandler {
   protected final MessageStreams source;
 
   public RSocketProxy(MessageStreams source) {
-    this.source = source;
+    this.source = Objects.requireNonNull(source, "source");
   }
 
   @Override

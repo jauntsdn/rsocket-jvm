@@ -21,6 +21,7 @@ import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Flowable;
 import io.reactivex.rxjava3.core.Scheduler;
 import io.reactivex.rxjava3.core.Single;
+import java.util.Objects;
 import java.util.Optional;
 import org.reactivestreams.Publisher;
 
@@ -28,7 +29,7 @@ public class RSocketProxy implements RSocket, RSocketHandler {
   protected final MessageStreams source;
 
   public RSocketProxy(MessageStreams source) {
-    this.source = source;
+    this.source = Objects.requireNonNull(source, "source");
   }
 
   @Override

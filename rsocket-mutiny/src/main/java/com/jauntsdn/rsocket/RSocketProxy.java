@@ -19,6 +19,7 @@ package com.jauntsdn.rsocket;
 import io.netty.buffer.ByteBufAllocator;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.Flow;
 import java.util.concurrent.ScheduledExecutorService;
@@ -27,7 +28,7 @@ public class RSocketProxy implements RSocket, RSocketHandler {
   protected final MessageStreams source;
 
   public RSocketProxy(MessageStreams source) {
-    this.source = source;
+    this.source = Objects.requireNonNull(source, "source");
   }
 
   @Override

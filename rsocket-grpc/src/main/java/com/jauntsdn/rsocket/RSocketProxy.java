@@ -18,6 +18,7 @@ package com.jauntsdn.rsocket;
 
 import io.grpc.stub.StreamObserver;
 import io.netty.buffer.ByteBufAllocator;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ScheduledExecutorService;
@@ -26,7 +27,7 @@ public class RSocketProxy implements RSocket, RSocketHandler {
   protected final MessageStreams source;
 
   public RSocketProxy(MessageStreams source) {
-    this.source = source;
+    this.source = Objects.requireNonNull(source, "source");
   }
 
   @Override
