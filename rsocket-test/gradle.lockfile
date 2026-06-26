@@ -1,10 +1,10 @@
 # This is a Gradle generated file for dependency locking.
 # Manual edits can break the build and are not advised.
 # This file is expected to be part of source control.
-com.google.protobuf:protobuf-java:3.25.8=compileClasspath,compileProtoPath,testCompileClasspath,testCompileProtoPath,testRuntimeClasspath
+com.google.protobuf:protobuf-java:3.25.9=compileClasspath,compileProtoPath,testCompileClasspath,testCompileProtoPath,testRuntimeClasspath
 com.google.protobuf:protoc:3.23.4=protobufToolsLocator_protoc
-io.netty:netty-buffer:4.1.131.Final=testCompileClasspath,testCompileProtoPath,testRuntimeClasspath
-io.netty:netty-common:4.1.131.Final=testCompileClasspath,testCompileProtoPath,testRuntimeClasspath
+io.netty:netty-buffer:4.1.135.Final=testCompileClasspath,testCompileProtoPath,testRuntimeClasspath
+io.netty:netty-common:4.1.135.Final=testCompileClasspath,testCompileProtoPath,testRuntimeClasspath
 net.bytebuddy:byte-buddy:1.18.3=testCompileClasspath,testCompileProtoPath,testRuntimeClasspath
 org.apiguardian:apiguardian-api:1.1.2=testCompileClasspath
 org.assertj:assertj-core:3.27.7=testCompileClasspath,testCompileProtoPath,testRuntimeClasspath
